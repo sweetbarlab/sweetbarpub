@@ -322,7 +322,7 @@ create policy "Public access" on stock_data
     <p class="sub" id="edit-modal-sub"></p>
     <div class="edit-field-row"><label>Qt Restante veille</label><input type="number" min="0" id="edit-veille" oninput="updateEditPreview()"></div>
     <div class="edit-field-row"><label>Qt Chargée aujourd'hui</label><input type="number" min="0" id="edit-charge" oninput="updateEditPreview()"></div>
-    <div class="edit-field-row"><label>Qt Restante fin journée</label><input type="number" min="0" id="edit-reste" oninput="validateEditReste()"></div>
+    <div class="edit-field-row"><label>Produits Vendue</label><input type="number" min="0" id="edit-reste" oninput="updateEditPreview()"></div>
     <div id="edit-total-preview" style="font-size:13px;color:#3949ab;font-weight:700;margin-top:4px;text-align:right"></div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModals()">Annuler</button>
@@ -522,11 +522,27 @@ function populateDaySelect(){
   for(let d=1;d<=days;d++){const o=document.createElement('option');o.value=d;o.textContent=d;if(d===cur)o.selected=true;sel.appendChild(o);}
 }
 
-// Cherche uniquement J-1 pour le report veille
+// Cherche le dernier jour sauvegardé avant le jour demandé
+// Cherche J-1, puis si Jour 1 du mois → dernier jour du mois précédent → si Jan → Dec année préc.
 async function findLastSavedDay(bar, year, month, day){
-  if(day <= 1) return null;
-  const data = await dbGet(bar, year, month, day-1);
-  return data ? {day: day-1, data} : null;
+  // Chercher J-1 dans le même mois
+  if(day > 1){
+    const data = await dbGet(bar, year, month, day-1);
+    if(data) return {day: day-1, data};
+  }
+  // Si on est le 1er du mois → chercher le dernier jour du mois précédent
+  if(day === 1){
+    let prevMonth = month - 1;
+    let prevYear = year;
+    if(prevMonth < 0){ prevMonth = 11; prevYear = year - 1; }
+    const prevDays = getDaysInMonth(prevYear, prevMonth);
+    // Chercher depuis le dernier jour du mois précédent
+    for(let d = prevDays; d >= 1; d--){
+      const data = await dbGet(bar, prevYear, prevMonth, d);
+      if(data) return {day: d, data};
+    }
+  }
+  return null;
 }
 
 async function loadDay(){
@@ -541,57 +557,53 @@ async function loadDay(){
       // Toujours vérifier le Jour J-1 pour s'assurer que la veille est correcte
       const prevData = await dbGet(currentBar, year, month, day-1);
 
+      // Normaliser : s'assurer que tous les produits actuels sont présents
+      const prods = getProds(currentBar);
+      let needsSave = false;
+
       if(saved){
-        // Jour déjà sauvegardé → vérifier si la veille correspond au reste de J-1
-        if(prevData){
-          const prods = getProds(currentBar);
-          let needsUpdate = false;
-          const correctedData = JSON.parse(JSON.stringify(saved));
+        // Jour déjà sauvegardé
+        let {data: correctedData, addedProducts: added1} = normalizeData(saved, currentBar, prevData);
 
-          SECTIONS.forEach(sec=>{
-            (prods[sec.key]||[]).forEach(prod=>{
-              const resteJm1 = prevData[sec.key]?.[prod]?.reste ?? null;
-              const veilleJ  = saved[sec.key]?.[prod]?.veille ?? null;
-              // Si la veille du jour J ne correspond pas au reste de J-1 → corriger
-              if(resteJm1 !== null && veilleJ !== resteJm1){
-                if(!correctedData[sec.key]) correctedData[sec.key]={};
-                if(!correctedData[sec.key][prod]) correctedData[sec.key][prod]={};
-                correctedData[sec.key][prod].veille = resteJm1;
-                needsUpdate = true;
-              }
-            });
+        // Vérifier si la veille correspond au reste de J-1 ET si des produits manquaient
+        let hasChanges = false;
+        SECTIONS.forEach(sec=>{
+          (prods[sec.key]||[]).forEach(prod=>{
+            const resteJm1 = prevData?.[sec.key]?.[prod]?.reste ?? null;
+            const veilleJ  = correctedData[sec.key]?.[prod]?.veille ?? null;
+            // Corriger la veille si elle ne correspond pas au reste de J-1
+            if(resteJm1 !== null && veilleJ !== resteJm1){
+              correctedData[sec.key][prod].veille = resteJm1;
+              hasChanges = true;
+            }
+            // Détecter si un produit a été ajouté
+            if(!saved[sec.key]?.[prod]) hasChanges = true; // détecté via added1.length aussi
           });
+        });
 
-          if(needsUpdate){
-            // Sauvegarder la correction silencieusement
-            await dbSave(currentBar, year, month, day, correctedData);
-            renderSections(correctedData);
-            showToast(`✓ Qt Restante veille du Jour ${day} corrigée depuis le Jour ${day-1}`);
-          } else {
-            renderSections(saved);
-          }
+        if(hasChanges || added1.length > 0){
+          await dbSave(currentBar, year, month, day, correctedData);
+          renderSections(correctedData);
+          if(added1.length > 0)
+            showToast(`✓ ${added1.length} produit(s) ajouté(s) au Jour ${day}`);
+          else
+            showToast(`✓ Données du Jour ${day} corrigées`);
         } else {
           renderSections(saved);
         }
       } else {
         // Pas de données pour ce jour → construire depuis J-1
-        if(prevData){
-          const prods = getProds(currentBar);
-          const autoData = {};
-          SECTIONS.forEach(sec=>{
-            autoData[sec.key] = {};
-            (prods[sec.key]||[]).forEach(prod=>{
-              const prevReste = prevData[sec.key]?.[prod]?.reste ?? 0;
-              autoData[sec.key][prod] = {veille: prevReste, charge:0, reste:0, vendue:0};
-            });
+        const {data: autoData} = normalizeData(null, currentBar, prevData);
+        // Mettre reste=0 et vendue=0 (veille déjà remplie par normalizeData)
+        SECTIONS.forEach(sec=>{
+          (prods[sec.key]||[]).forEach(prod=>{
+            autoData[sec.key][prod].reste = 0;
+            autoData[sec.key][prod].vendue = 0;
           });
-          // Sauvegarder automatiquement pour que J+1 puisse aussi se reporter
-          await dbSave(currentBar, year, month, day, autoData);
-          renderSections(autoData);
-          showToast(`✓ Qt Restante veille du Jour ${day} remplie depuis le Jour ${day-1}`);
-        } else {
-          renderSections(null);
-        }
+        });
+        await dbSave(currentBar, year, month, day, autoData);
+        renderSections(autoData);
+        if(prevData) showToast(`✓ Qt Restante veille du Jour ${day} remplie depuis le Jour ${day-1}`);
       }
     } else {
       // Jour 1 : afficher directement
@@ -622,6 +634,38 @@ function getStatusCls(val,isWhisky){
 }
 function encodeId(bar,sec,prod){return (bar+'__'+sec+'__'+prod).replace(/[^a-zA-Z0-9_]/g,'_');}
 
+// ── NORMALISATION DES DONNÉES ────────────────────────────────────────────────
+// S'assure que tous les produits actuels sont présents dans les données
+// Si un produit existe dans la config mais pas dans les données → ajout avec veille=reste du jour précédent
+// Normalise les données : s'assure que tous les produits actuels sont présents
+// Retourne {data, addedProducts} pour savoir si des produits ont été ajoutés
+function normalizeData(saved, bar, prevData){
+  const prods = getProds(bar);
+  const result = saved ? JSON.parse(JSON.stringify(saved)) : {};
+  let addedProducts = [];
+
+  SECTIONS.forEach(sec=>{
+    if(!result[sec.key]) result[sec.key] = {};
+    (prods[sec.key]||[]).forEach(prod=>{
+      if(result[sec.key][prod] === undefined){
+        // Produit absent → initialiser avec veille = reste J-1 si dispo
+        const prevReste = prevData?.[sec.key]?.[prod]?.reste ?? 0;
+        result[sec.key][prod] = {
+          veille: prevReste,
+          charge: 0,
+          reste: 0,
+          vendue: 0
+        };
+        addedProducts.push(`${sec.key}:${prod}`);
+      }
+    });
+    // Supprimer les produits qui n'existent plus dans la config (optionnel - garder pour l'historique)
+    // On ne supprime PAS pour conserver l'historique des produits supprimés
+  });
+
+  return {data: result, addedProducts};
+}
+
 // ── RENDER ────────────────────────────────────────────────────────────────────
 function renderSections(saved){
   const bar=currentBar, prods=getProds(bar);
@@ -645,7 +689,7 @@ function renderSections(saved){
       <th>Produits<br><small>Veille</small></th>
       <th>Produits<br><small>Chargée</small></th>
       <th>Total<br><small>Produits</small></th>
-      <th style="background:#fff3e0;color:#bf360c">Vendue<br><small>Produits</small></th>
+      <th style="background:#fff3e0;color:#bf360c">Produits<br><small>Vendue</small></th>
       <th>Restante<br><small>fin J.</small></th>
       <th style="width:44px;padding:2px"></th>
     </tr></thead><tbody>`;
@@ -668,8 +712,8 @@ function renderSections(saved){
         <td><input class="qty-input${(sv.veille||0)===0?' zero-val':''}" type="number" min="0" id="${pid}_v" value="${sv.veille||0}" onfocus="clearIfZero(this)" onblur="restoreIfEmpty(this,'${pid}')" onchange="recalcRow('${pid}')"></td>
         <td><input class="qty-input${(sv.charge||0)===0?' zero-val':''}" type="number" min="0" id="${pid}_c" value="${sv.charge||0}" onfocus="clearIfZero(this)" onblur="restoreIfEmpty(this,'${pid}')" onchange="recalcRow('${pid}')"></td>
         <td class="total-cell" id="${pid}_t">${tot}</td>
-        <td class="vendue-cell" id="${pid}_s" style="font-weight:800;color:#bf360c;font-size:14px">${(sv.charge||0)===0 ? 0 : ((+sv.reste||0) !== (+sv.veille||0) ? Math.max(0,tot-(+sv.reste||0)) : 0)}</td>
-        <td><input class="qty-input ${rc}${(sv.reste||0)===0?' zero-val':''}" type="number" min="0" id="${pid}_r" value="${sv.reste||0}" onfocus="clearIfZero(this)" onblur="restoreIfEmpty(this,'${pid}');validateReste('${pid}',${sec.isWhisky})" oninput="validateReste('${pid}',${sec.isWhisky})" onchange="recalcRow('${pid}');validateReste('${pid}',${sec.isWhisky})"></td>
+        <td><input class="qty-input${(sv.vendue||0)===0?' zero-val':''}" type="number" min="0" id="${pid}_s" value="${sv.vendue||0}" style="color:#bf360c;border-color:#ffcc80;background:#fff8f0" onfocus="clearIfZero(this)" onblur="restoreIfEmpty(this,'${pid}')" oninput="calcResteFromVendue('${pid}')"></td>
+        <td class="${rc}" id="${pid}_r" style="font-weight:800;font-size:12px">${Math.max(0,tot-(+sv.vendue||0))}</td>
         <td><div class="action-cell">
           <button class="btn-edit" onclick="openEditModal('${bar}','${sec.key}','${prod.replace(/'/g,"\\'")}','${pid}',${sec.isWhisky})">✏️</button>
           <button class="btn-del" onclick="deleteProduct('${bar}','${sec.key}','${prod.replace(/'/g,"\\'")}')">✕</button>
@@ -729,6 +773,31 @@ function showRestoError(reste, total){
   restoErrorTimer = setTimeout(()=>{ t.style.display='none'; }, 4000);
 }
 
+// Calcule Restante fin = Total - Produits Vendue
+function calcResteFromVendue(pid){
+  const tEl = document.getElementById(pid+'_t');
+  const sEl = document.getElementById(pid+'_s'); // vendue input
+  const rEl = document.getElementById(pid+'_r'); // reste cell
+  if(!tEl || !sEl || !rEl) return;
+  const tot = +tEl.textContent||0;
+  const vendue = +sEl.value||0;
+  const reste = Math.max(0, tot - vendue);
+  rEl.textContent = reste;
+  // Appliquer couleur statut
+  const vEl = document.getElementById(pid+'_v');
+  const cEl = document.getElementById(pid+'_c');
+  const v = +vEl?.value||0;
+  const c = +cEl?.value||0;
+  // Détecter si whisky via classe existante
+  const isWhisky = rEl.className.includes('rest-') || false;
+  // Recalc classe couleur
+  const sec = SECTIONS.find(s => pid.includes('__'+s.key+'__'));
+  const cls = getStatusCls(reste, sec?.isWhisky||false);
+  rEl.className = cls;
+  // Mettre à jour non sauvegardé
+  markUnsaved();
+}
+
 // Vide le champ si la valeur est 0 quand on clique dessus
 function clearIfZero(el){
   if(el.value === '0' || el.value === 0){
@@ -751,9 +820,9 @@ function restoreIfEmpty(el, pid){
 function recalcRow(pid){
   const vEl=document.getElementById(pid+'_v');
   const cEl=document.getElementById(pid+'_c');
-  const rEl=document.getElementById(pid+'_r');
+  const rEl=document.getElementById(pid+'_r'); // cellule calculée (td)
   const tEl=document.getElementById(pid+'_t');
-  const sEl=document.getElementById(pid+'_s');
+  const sEl=document.getElementById(pid+'_s'); // input Produits Vendue
 
   const v = +vEl?.value||0;
   const c = +cEl?.value||0;
@@ -761,19 +830,26 @@ function recalcRow(pid){
 
   if(tEl) tEl.textContent = tot;
 
-  const r = +rEl?.value||0;
+  // Restante = Total - Produits Vendue (calculé automatiquement)
+  const vendue = +sEl?.value||0;
+  const reste = Math.max(0, tot - vendue);
+  if(rEl){
+    rEl.textContent = reste;
+    const sec = SECTIONS.find(s => pid.includes('__'+s.key+'__'));
+    rEl.className = getStatusCls(reste, sec?.isWhisky||false);
+  }
 
-  // Mettre à jour classe zero-val
+  // zero-val
   if(vEl) vEl.classList.toggle('zero-val', v===0 && vEl.value!=='');
   if(cEl) cEl.classList.toggle('zero-val', c===0 && cEl.value!=='');
-  if(rEl) rEl.classList.toggle('zero-val', r===0 && rEl.value!=='');
-
-  // Qt Vendue = 0 si charge=0, sinon calculée si restante fin ≠ veille
-  if(sEl) sEl.textContent = c===0 ? 0 : (r !== v ? Math.max(0,tot-r) : 0);
+  if(sEl) sEl.classList.toggle('zero-val', vendue===0 && sEl.value!=='');
 }
 function updateRestStyle(pid,isWhisky){
   const el=document.getElementById(pid+'_r');
-  el.className='qty-input '+getStatusCls(+el.value||0,isWhisky);
+  if(!el) return;
+  const val = el.tagName==='INPUT' ? +el.value||0 : +el.textContent||0;
+  if(el.tagName==='INPUT') el.className='qty-input '+getStatusCls(val,isWhisky);
+  else el.className = getStatusCls(val,isWhisky);
   refreshSummary();
 }
 function refreshSummary(){
@@ -843,11 +919,11 @@ function collectData(){
       if(v){
         const veille2=+v.value||0;
         const charge2=+c.value||0;
-        // Qt Restante fin = valeur saisie dans le champ (quelle que soit la charge)
-        const reste2 = +r.value||0;
         const tot2=veille2+charge2;
-        // Qt Vendue = 0 si charge=0, sinon calculée si restante fin ≠ veille
-        const vendue2 = charge2===0 ? 0 : (reste2 !== veille2 ? Math.max(0,tot2-reste2) : 0);
+        // Vendue = valeur saisie dans le champ Produits Vendue
+        const vendue2 = +s?.value||0;
+        // Restante = Total - Vendue (calculé)
+        const reste2 = Math.max(0, tot2 - vendue2);
         data[sec.key][prod]={veille:veille2, charge:charge2, reste:reste2, vendue:vendue2};
       }
     });
@@ -997,15 +1073,18 @@ function openEditModal(bar,sec,prod,pid,isWhisky){
   document.getElementById('edit-modal-sub').textContent=`Produit : ${prod}`;
   const _ev=document.getElementById(pid+'_v'); document.getElementById('edit-veille').value=_ev&&_ev.value!==''?_ev.value:'';
   const _ec=document.getElementById(pid+'_c'); document.getElementById('edit-charge').value=_ec&&_ec.value!==''?_ec.value:'';
-  const _er=document.getElementById(pid+'_r'); document.getElementById('edit-reste').value=_er&&_er.value!==''?_er.value:'';
+  const _es=document.getElementById(pid+'_s'); document.getElementById('edit-reste').value=_es&&_es.value!==''?_es.value:'';
   updateEditPreview();
   document.getElementById('edit-modal').classList.add('open');
   setTimeout(()=>document.getElementById('edit-veille').focus(),100);
 }
 function updateEditPreview(){
-  const v=+document.getElementById('edit-veille').value||0, c=+document.getElementById('edit-charge').value||0;
-  const tot3=v+c; const r3=+document.getElementById('edit-reste').value||0;
-  document.getElementById('edit-total-preview').textContent=`Total dispo : ${tot3}  |  Qt Vendue estimée : ${Math.max(0,tot3-r3)}`;
+  const v=+document.getElementById('edit-veille').value||0;
+  const c=+document.getElementById('edit-charge').value||0;
+  const s3=+document.getElementById('edit-reste').value||0; // edit-reste = vendue dans nouvelle logique
+  const tot3=v+c;
+  const reste3=Math.max(0,tot3-s3);
+  document.getElementById('edit-total-preview').textContent=`Total dispo : ${tot3}  |  Restante fin J. : ${reste3}`;
 }
 function validateEditReste(){
   const r3=+document.getElementById('edit-reste').value||0;
@@ -1029,265 +1108,20 @@ function confirmEdit(){
   const{pid,isWhisky,prod}=editCtx;
   const v=+document.getElementById('edit-veille').value||0;
   const c=+document.getElementById('edit-charge').value||0;
-  const r=+document.getElementById('edit-reste').value||0;
+  const vendue_final=+document.getElementById('edit-reste').value||0; // edit-reste = Produits Vendue
   document.getElementById(pid+'_v').value=v;
   document.getElementById(pid+'_c').value=c;
-  document.getElementById(pid+'_r').value=r;
-  // Qt Restante fin = valeur saisie (libre quelle que soit la charge)
-  const r_final = r;
-  document.getElementById(pid+'_r').value = r_final;
   const tot4=v+c;
   document.getElementById(pid+'_t').textContent=tot4;
-  document.getElementById(pid+'_r').className='qty-input '+getStatusCls(r_final,isWhisky);
+  // Mettre à jour Produits Vendue (input)
   const sEl2=document.getElementById(pid+'_s');
-  if(sEl2) sEl2.textContent = c===0 ? 0 : (r_final !== v ? Math.max(0,tot4-r_final) : 0);
+  if(sEl2){ sEl2.value=vendue_final; sEl2.classList.toggle('zero-val',vendue_final===0); }
+  // Calculer et afficher Restante fin
+  const reste4=Math.max(0,tot4-vendue_final);
+  const rEl4=document.getElementById(pid+'_r');
+  if(rEl4){ rEl4.textContent=reste4; rEl4.className=getStatusCls(reste4,isWhisky); }
   refreshSummary();closeModals();showToast(`✓ "${prod}" modifié`);editCtx=null;
 }
-
-// ── NEW BAR ───────────────────────────────────────────────────────────────────
-const PALETTE=[
-  {c:'#1565c0',l:'#e3f2fd'},{c:'#1b7e3a',l:'#e8f5ee'},{c:'#c05c00',l:'#fff3e0'},
-  {c:'#6a1b9a',l:'#f3e5f5'},{c:'#c62828',l:'#ffebee'},{c:'#00838f',l:'#e0f7fa'},
-  {c:'#558b2f',l:'#f1f8e9'},{c:'#ad1457',l:'#fce4ec'},{c:'#4527a0',l:'#ede7f6'},
-  {c:'#37474f',l:'#eceff1'},{c:'#e65100',l:'#fff3e0'},{c:'#00695c',l:'#e0f2f1'}
-];
-let selectedColor=PALETTE[0];
-
-function renderColorPicker(){
-  document.getElementById('color-picker').innerHTML=PALETTE.map((p,i)=>
-    `<div class="color-swatch${i===0?' selected':''}" style="background:${p.c}" onclick="selectColor(${i})"></div>`
-  ).join('');
-}
-function selectColor(i){
-  selectedColor=PALETTE[i];
-  document.querySelectorAll('.color-swatch').forEach((s,j)=>s.classList.toggle('selected',i===j));
-}
-
-function openNewBarModal(){
-  renderColorPicker();
-  selectedColor=PALETTE[0];
-  document.getElementById('newbar-name').value='';
-  // populate source selector
-  const sel=document.getElementById('copy-src');
-  sel.innerHTML='<option value="">— Aucune copie —</option>'+
-    Object.keys(BARS).map(k=>`<option value="${k}">${BARS[k].name}</option>`).join('');
-  document.getElementById('copy-list-container').innerHTML='';
-  document.getElementById('newbar-modal').classList.add('open');
-  setTimeout(()=>document.getElementById('newbar-name').focus(),100);
-}
-
-function renderCopyList(){
-  const srcKey=document.getElementById('copy-src').value;
-  const container=document.getElementById('copy-list-container');
-  if(!srcKey){container.innerHTML='';return;}
-  const prods=getProds(srcKey);
-  const secsCopy=[
-    {key:'boissons',label:'🍺 Boissons'},
-    {key:'vins',label:'🍷 Vins'},
-    {key:'whisky',label:'🥃 Whisky & Spiritueux'},
-    {key:'champagne',label:'🍾 Champagne'}
-  ];
-  container.innerHTML=`<div class="copy-source-box">`+secsCopy.map(sec=>{
-    const list=prods[sec.key]||[];
-    if(!list.length)return '';
-    return `<div class="copy-section-group">
-      <div class="copy-section-label">
-        ${sec.label}
-        <span class="sel-all-btn" onclick="toggleAllSec('${sec.key}',true)">Tout sélectionner</span>
-        <span class="sel-all-btn" onclick="toggleAllSec('${sec.key}',false)" style="margin-left:6px">Tout désélectionner</span>
-      </div>
-      <div class="copy-prod-grid">
-        ${list.map(p=>{
-          const id='chip_'+encodeId('nb',sec.key,p);
-          return `<label class="copy-chip on" id="${id}">
-            <input type="checkbox" data-sec="${sec.key}" value="${p}" checked onchange="this.closest('label').classList.toggle('on',this.checked)">
-            ${p}
-          </label>`;
-        }).join('')}
-      </div>
-    </div>`;
-  }).join('')+'</div>';
-}
-
-function toggleAllSec(sec,checked){
-  document.querySelectorAll(`#copy-list-container input[data-sec="${sec}"]`).forEach(cb=>{
-    cb.checked=checked;
-    cb.closest('label').classList.toggle('on',checked);
-  });
-}
-
-async function confirmNewBar(){
-  const name=document.getElementById('newbar-name').value.trim();
-  if(!name){showToast('⚠ Veuillez saisir un nom','#e65100');return;}
-  const key=name.toLowerCase().replace(/[^a-z0-9]/g,'_').replace(/__+/g,'_').replace(/^_|_$/g,'');
-  if(!key){showToast('⚠ Nom invalide','#e65100');return;}
-  if(BARS[key]){showToast('⚠ Un bar avec ce nom existe déjà','#e65100');return;}
-  // Collect checked products
-  const newProds={boissons:[],vins:[],whisky:[],champagne:[]};
-  document.querySelectorAll('#copy-list-container input[type=checkbox]:checked').forEach(cb=>{
-    const sec=cb.dataset.sec;
-    if(newProds[sec])newProds[sec].push(cb.value);
-  });
-  BARS[key]={name,color:selectedColor.c,colorLight:selectedColor.l,products:newProds};
-  try{await dbSaveConfig(BARS);}catch(e){showToast('⚠ Erreur sauvegarde config','#c0392b');}
-  closeModals();
-  renderTabs();
-  switchBar(key);
-  showToast(`✓ Bar "${name}" créé !`);
-}
-
-// ── SYNC PRODUITS PAR DÉFAUT ──────────────────────────────────────────────────
-async function resetDefaultProducts(){
-  if(!confirm(`Forcer la synchronisation des produits par défaut pour TOUS les bars ?
-
-Cela ajoutera les catégories manquantes (ex: Champagne pour Cissin) sans supprimer tes produits ajoutés manuellement.`)) return;
-
-  let updated = false;
-  Object.keys(DEFAULT_BARS).forEach(barKey=>{
-    if(!BARS[barKey]) return;
-    Object.keys(DEFAULT_BARS[barKey].products).forEach(cat=>{
-      const defaultProds = DEFAULT_BARS[barKey].products[cat];
-      const currentProds = BARS[barKey].products[cat];
-      // Si la catégorie est vide ET que les défauts ont des produits → forcer
-      if((!currentProds || currentProds.length === 0) && defaultProds && defaultProds.length > 0){
-        BARS[barKey].products[cat] = [...defaultProds];
-        // Supprimer le marqueur __emptied si présent
-        if(BARS[barKey].__emptied?.[cat]) delete BARS[barKey].__emptied[cat];
-        updated = true;
-        console.log(`Ajout catégorie ${cat} pour ${barKey}`);
-      }
-    });
-  });
-
-  if(updated){
-    try{
-      await dbSaveConfig(BARS);
-      renderTabs();
-      switchBar(currentBar);
-      showToast('✓ Produits par défaut synchronisés !');
-    }catch(e){
-      showToast('⚠ Erreur de synchronisation','#c0392b');
-    }
-  } else {
-    showToast('✓ Tous les produits sont déjà à jour');
-  }
-}
-
-// ── FIX DATABASE ──────────────────────────────────────────────────────────────
-function openFixModal(){
-  document.getElementById('fix-progress').style.display='none';
-  document.getElementById('fix-log').innerHTML='';
-  document.getElementById('fix-run-btn').disabled=false;
-  document.getElementById('fix-run-btn').textContent='🔧 Lancer la correction';
-  document.getElementById('fix-modal').classList.add('open');
-}
-
-function fixLog(msg, color='#555'){
-  const log = document.getElementById('fix-log');
-  log.innerHTML += `<div style="color:${color};margin-bottom:3px">${msg}</div>`;
-  log.scrollTop = log.scrollHeight;
-}
-
-async function runDatabaseFix(){
-  const btn = document.getElementById('fix-run-btn');
-  btn.disabled = true;
-  btn.textContent = '⏳ Correction en cours...';
-  document.getElementById('fix-progress').style.display='block';
-  document.getElementById('fix-log').innerHTML='';
-
-  const {year, month} = getSelDate();
-  const maxDay = getDaysInMonth(year, month);
-  let totalFixed = 0;
-  let totalChecked = 0;
-
-  fixLog(`📅 Correction du mois ${MONTHS[month]} ${year}`, '#1a237e');
-  fixLog(`🔍 Vérification de tous les bars sur ${maxDay} jours...`, '#555');
-
-  for(const barKey of Object.keys(BARS)){
-    const barName = BARS[barKey].name;
-    fixLog(`
-🏠 ${barName}`, '#3949ab');
-    const prods = getProds(barKey);
-
-    for(let d=1; d<=maxDay; d++){
-      try{
-        const dayData = await dbGet(barKey, year, month, d);
-        if(!dayData) continue;
-
-        let dayModified = false;
-        const newData = {};
-
-        SECTIONS.forEach(sec=>{
-          newData[sec.key] = {};
-          (prods[sec.key]||[]).forEach(prod=>{
-            const sv = dayData[sec.key]?.[prod];
-            if(!sv){ newData[sec.key][prod] = {veille:0,charge:0,reste:0,vendue:0}; return; }
-
-            const veille = sv.veille||0;
-            const charge = sv.charge||0;
-            let reste = sv.reste||0;
-            let vendue = sv.vendue||0;
-
-            // RÈGLE DE CORRECTION :
-            // Si charge > 0 ET reste = 0 → probable bug (reste devrait être ≠ 0)
-            // On ne peut pas deviner la valeur exacte donc on met reste = veille + charge (tout en stock)
-            // et vendue = 0 pour que l'utilisateur puisse re-saisir
-            // Si charge = 0 ET reste = 0 ET veille > 0 → reste = veille (rien vendu)
-            if(charge === 0 && reste === 0 && veille > 0){
-              reste = veille; // Rien de chargé, rien de vendu → reste = veille
-              vendue = 0;
-              dayModified = true;
-              fixLog(`  ✓ Jour ${d} — ${prod}: reste 0→${reste} (charge=0)`, '#2e7d32');
-              totalFixed++;
-            }
-            // Si charge > 0 ET reste = 0 → on laisse à 0 car on ne sait pas combien a été vendu
-            // L'utilisateur devra re-saisir manuellement
-
-            newData[sec.key][prod] = {veille, charge, reste, vendue};
-            totalChecked++;
-          });
-        });
-
-        if(dayModified){
-          await dbSave(barKey, year, month, d, newData);
-        }
-      }catch(e){
-        fixLog(`  ⚠ Jour ${d} — erreur: ${e.message}`, '#c0392b');
-      }
-    }
-  }
-
-  fixLog(`
-✅ Correction terminée !`, '#1b7e3a');
-  fixLog(`📊 ${totalChecked} entrées vérifiées, ${totalFixed} corrections appliquées`, '#1b7e3a');
-
-  btn.textContent = '✓ Terminé';
-  btn.style.background = '#1b7e3a';
-
-  // Recharger le jour affiché
-  await loadDay();
-  showToast(`✓ ${totalFixed} corrections appliquées`);
-}
-
-// ── DELETE BAR ────────────────────────────────────────────────────────────────
-let barToDelete=null;
-function askDeleteBar(e,key){
-  e.stopPropagation();
-  barToDelete=key;
-  document.getElementById('delbar-msg').textContent=`Supprimer "${BARS[key].name}" et tous ses produits ?`;
-  document.getElementById('delbar-modal').classList.add('open');
-}
-async function confirmDeleteBar(){
-  if(!barToDelete)return;
-  const name=BARS[barToDelete].name;
-  delete BARS[barToDelete];
-  try{await dbSaveConfig(BARS);}catch(e){}
-  closeModals();barToDelete=null;
-  const first=Object.keys(BARS)[0];
-  renderTabs();switchBar(first);
-  showToast(`✓ Bar "${name}" supprimé`,'#c0392b');
-}
-
 // ── UTILS ─────────────────────────────────────────────────────────────────────
 function closeModals(){document.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('open'));}
 function showToast(msg,bg='#1b7e3a'){
