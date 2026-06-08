@@ -41,6 +41,8 @@ body{font-family:Arial,sans-serif;background:#f4f6fa;color:#1a1a2e;min-height:10
 .btn-refresh{background:#f0f4ff;color:#3949ab;border:1px solid #c5cae9;padding:7px 12px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer}
 .btn-fix{background:#fff8e1;color:#f57f17;border:1px solid #ffe082;padding:7px 12px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer}
 .btn-fix:hover{background:#fff3cd}
+.btn-reset-prods{background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7;padding:7px 12px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer}
+.btn-reset-prods:hover{background:#c8e6c9}
 .btn-add-prod{color:#fff;border:none;padding:8px 14px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer}
 /* LEGEND */
 .legend-bar{display:flex;gap:14px;flex-wrap:wrap;padding:10px 20px;background:#f9fafb;border-bottom:1px solid var(--border);align-items:center}
@@ -215,6 +217,7 @@ create policy "Public access" on stock_data
   <button class="btn-add-prod" id="btn-add-prod" onclick="openAddModal()">+ Ajouter produit</button>
   <button class="btn-refresh" onclick="refreshPage()">⟳ Rafraîchir</button>
   <button class="btn-fix" onclick="openFixModal()" title="Corriger les données existantes en base">🔧 Corriger base</button>
+  <button class="btn-reset-prods" onclick="resetDefaultProducts()" title="Forcer la mise à jour des produits par défaut">↺ Sync produits</button>
 </div>
 
 <div class="legend-bar" id="legend-bar" style="display:none">
@@ -974,6 +977,43 @@ async function confirmNewBar(){
   renderTabs();
   switchBar(key);
   showToast(`✓ Bar "${name}" créé !`);
+}
+
+// ── SYNC PRODUITS PAR DÉFAUT ──────────────────────────────────────────────────
+async function resetDefaultProducts(){
+  if(!confirm(`Forcer la synchronisation des produits par défaut pour TOUS les bars ?
+
+Cela ajoutera les catégories manquantes (ex: Champagne pour Cissin) sans supprimer tes produits ajoutés manuellement.`)) return;
+
+  let updated = false;
+  Object.keys(DEFAULT_BARS).forEach(barKey=>{
+    if(!BARS[barKey]) return;
+    Object.keys(DEFAULT_BARS[barKey].products).forEach(cat=>{
+      const defaultProds = DEFAULT_BARS[barKey].products[cat];
+      const currentProds = BARS[barKey].products[cat];
+      // Si la catégorie est vide ET que les défauts ont des produits → forcer
+      if((!currentProds || currentProds.length === 0) && defaultProds && defaultProds.length > 0){
+        BARS[barKey].products[cat] = [...defaultProds];
+        // Supprimer le marqueur __emptied si présent
+        if(BARS[barKey].__emptied?.[cat]) delete BARS[barKey].__emptied[cat];
+        updated = true;
+        console.log(`Ajout catégorie ${cat} pour ${barKey}`);
+      }
+    });
+  });
+
+  if(updated){
+    try{
+      await dbSaveConfig(BARS);
+      renderTabs();
+      switchBar(currentBar);
+      showToast('✓ Produits par défaut synchronisés !');
+    }catch(e){
+      showToast('⚠ Erreur de synchronisation','#c0392b');
+    }
+  } else {
+    showToast('✓ Tous les produits sont déjà à jour');
+  }
 }
 
 // ── FIX DATABASE ──────────────────────────────────────────────────────────────
