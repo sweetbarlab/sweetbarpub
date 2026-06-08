@@ -90,16 +90,18 @@ body{font-family:Arial,sans-serif;background:#f4f6fa;color:#1a1a2e;min-height:10
 .sec-champagne{background:#fce4ec;border-left:5px solid #880e4f;color:#560027}
 /* TABLE */
 .stock-table{width:100%;border-collapse:collapse}
-.stock-table th{background:#f4f6fa;color:#555;font-size:9px;text-transform:uppercase;letter-spacing:.2px;padding:5px 2px;text-align:center;border-bottom:1px solid var(--border);font-weight:700}
+.stock-table th{background:#f4f6fa;color:#222;font-size:10px;text-transform:uppercase;letter-spacing:.2px;padding:5px 2px;text-align:center;border-bottom:2px solid var(--border);font-weight:900}
 .stock-table th:first-child{text-align:left;padding-left:6px;position:sticky;left:0;z-index:3;background:#f4f6fa;box-shadow:2px 0 4px rgba(0,0,0,.08)}
 .stock-table td{padding:4px 2px;border-bottom:1px solid #eef0f5;font-size:11px;text-align:center;color:#333}
 .stock-table td:first-child{text-align:left;color:#1a1a2e;font-weight:600;padding-left:6px;font-size:11px;position:sticky;left:0;z-index:2;background:#fff;box-shadow:2px 0 4px rgba(0,0,0,.08)}
 .stock-table tr:hover td:first-child{background:#f8f9ff}
 .stock-table tr:last-child td{border-bottom:none}
-.stock-table tr:hover td{background:rgba(100,149,237,.12)!important}
-.stock-table tr:hover td:first-child{background:rgba(100,149,237,.12)!important}
+.stock-table tr:hover td{background:rgba(60,100,200,.1)!important}
+.stock-table tr:hover td:first-child{background:rgba(60,100,200,.1)!important}
+.stock-table tr:hover .qty-input{background:rgba(60,100,200,.05)!important}
 tr.hidden-row{display:none}
 .qty-input{width:52px;background:#f4f6fa;color:#1a237e;border:1px solid #c5cae9;border-radius:4px;padding:3px 2px;font-size:11px;text-align:center;outline:none;font-weight:700}
+.qty-input:focus{border-color:#3949ab;background:#fff!important}
 .total-cell{font-size:12px}
 .vendue-cell{font-size:12px}
 /* Responsive mobile */
@@ -118,13 +120,13 @@ tr.hidden-row{display:none}
 }
 .qty-input:focus{border-color:#3949ab;background:#fff}
 .qty-input::placeholder{color:#bbb;font-weight:400;font-size:12px}
-.qty-input.zero-val{color:#ccc;}
-.qty-input.zero-val:focus{color:#1a237e;}
+.qty-input.zero-val{color:#aaa;}
+.qty-input.zero-val:focus{color:#1a237e;background:#fff!important;}
 .qty-input.error-val{background:#fff0f0!important;color:#c0392b!important;border:2px solid #e74c3c!important;animation:shake .3s ease;}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 #resto-error-toast{position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#c0392b;color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:700;box-shadow:0 4px 16px rgba(0,0,0,.3);display:none;z-index:400;text-align:center;min-width:320px}
 .total-cell{font-weight:800;color:#1a237e;font-size:14px}
-.vendue-cell{background:#fff3e0;border-left:2px solid #ffcc80}
+.vendue-cell{}
 /* Scroll horizontal mobile */
 .section-block{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .table-scroll-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%}
@@ -413,6 +415,21 @@ async function dbGet(bar,y,m,d){
   return rows?.[0]?.data||null;
 }
 async function dbSave(bar,y,m,d,data){
+  // Forcer tous les champs en nombres pour éviter les problèmes de type string
+  const cleanData = {};
+  Object.keys(data).forEach(sec=>{
+    cleanData[sec]={};
+    Object.keys(data[sec]).forEach(prod=>{
+      const v=data[sec][prod];
+      cleanData[sec][prod]={
+        veille: +(v.veille||0),
+        charge: +(v.charge||0),
+        reste:  +(v.reste||0),
+        vendue: +(v.vendue||0)
+      };
+    });
+  });
+  data = cleanData;
   const id=`${bar}_${y}_${m+1}_${d}`;
   await sbFetch('POST',TABLE,{id,bar,year:y,month:m+1,day:d,data,updated_at:new Date().toISOString()});
 }
@@ -569,11 +586,11 @@ async function loadDay(){
         let hasChanges = false;
         SECTIONS.forEach(sec=>{
           (prods[sec.key]||[]).forEach(prod=>{
-            const resteJm1 = prevData?.[sec.key]?.[prod]?.reste ?? null;
+            const resteJm1 = prevData?.[sec.key]?.[prod]?.reste !== undefined ? +(prevData[sec.key][prod].reste) : null;
             const veilleJ  = correctedData[sec.key]?.[prod]?.veille ?? null;
             // Corriger la veille si elle ne correspond pas au reste de J-1
             if(resteJm1 !== null && veilleJ !== resteJm1){
-              correctedData[sec.key][prod].veille = resteJm1;
+              correctedData[sec.key][prod].veille = +resteJm1; // forcer en nombre
               hasChanges = true;
             }
             // Détecter si un produit a été ajouté
@@ -649,11 +666,11 @@ function normalizeData(saved, bar, prevData){
     (prods[sec.key]||[]).forEach(prod=>{
       if(result[sec.key][prod] === undefined){
         // Produit absent → initialiser avec veille = reste J-1 si dispo
-        const prevReste = prevData?.[sec.key]?.[prod]?.reste ?? 0;
+        const prevReste = +(prevData?.[sec.key]?.[prod]?.reste ?? 0); // forcer en nombre
         result[sec.key][prod] = {
-          veille: prevReste,
+          veille: +prevReste,
           charge: 0,
-          reste: 0,
+          reste:  0,
           vendue: 0
         };
         addedProducts.push(`${sec.key}:${prod}`);
@@ -685,11 +702,11 @@ function renderSections(saved){
       <col class="c-act">
     </colgroup>
     <thead><tr>
-      <th style="padding:4px 3px;text-align:left;position:sticky;left:0;z-index:3;background:#f4f6fa">Produit</th>
+      <th style="padding:4px 3px;text-align:left;position:sticky;left:0;z-index:3;background:#f4f6fa;font-weight:900;color:#222;font-size:10px">Produit</th>
       <th>Produits<br><small>Veille</small></th>
       <th>Produits<br><small>Chargée</small></th>
       <th>Total<br><small>Produits</small></th>
-      <th style="background:#fff3e0;color:#bf360c">Produits<br><small>Vendue</small></th>
+      <th style="color:#000;font-weight:900;font-size:10px">Produits<br><small style="font-weight:900">Vendue</small></th>
       <th>Restante<br><small>fin J.</small></th>
       <th style="width:44px;padding:2px"></th>
     </tr></thead><tbody>`;
@@ -701,18 +718,18 @@ function renderSections(saved){
     };
     list.forEach((prod,rowIdx)=>{
       const pid=encodeId(bar,sec.key,prod);
-      const sv=saved?.[ sec.key]?.[prod]||{veille:0,charge:0,reste:0};
+      const sv=saved?.[ sec.key]?.[prod]||{veille:0,charge:0,reste:0,vendue:0};
       const tot=(+sv.veille||0)+(+sv.charge||0);
-      const rc=getStatusCls(sv.reste,sec.isWhisky);
+      const rc=getStatusCls(+(sv.reste||0),sec.isWhisky);
       const rowBg = (rowColors[sec.key]||['#fff','#f9f9f9'])[rowIdx%2];
       total++;
       if(rc==='rest-rouge')rouge++;else if(rc==='rest-jaune')jaune++;else vert++;
       html+=`<tr style="background:${rowBg}">
-        <td style="background:${rowBg}">${prod}</td>
-        <td><input class="qty-input${(sv.veille||0)===0?' zero-val':''}" type="number" min="0" id="${pid}_v" value="${sv.veille||0}" onfocus="clearIfZero(this)" onblur="restoreIfEmpty(this,'${pid}')" onchange="recalcRow('${pid}')"></td>
-        <td><input class="qty-input${(sv.charge||0)===0?' zero-val':''}" type="number" min="0" id="${pid}_c" value="${sv.charge||0}" onfocus="clearIfZero(this)" onblur="restoreIfEmpty(this,'${pid}')" onchange="recalcRow('${pid}')"></td>
-        <td class="total-cell" id="${pid}_t">${tot}</td>
-        <td><input class="qty-input${(sv.vendue||0)===0?' zero-val':''}" type="number" min="0" id="${pid}_s" value="${sv.vendue||0}" style="color:#bf360c;border-color:#ffcc80;background:#fff8f0" onfocus="clearIfZero(this)" onblur="restoreIfEmpty(this,'${pid}')" oninput="calcResteFromVendue('${pid}')"></td>
+        <td style="background:${rowBg};position:sticky;left:0;z-index:2;box-shadow:2px 0 4px rgba(0,0,0,.08)">${prod}</td>
+        <td style="background:${rowBg}"><input class="qty-input${(sv.veille||0)===0?' zero-val':''}" type="number" min="0" id="${pid}_v" value="${sv.veille||0}" style="background:${rowBg}" onfocus="clearIfZero(this)" onblur="restoreIfEmpty(this,'${pid}')" onchange="recalcRow('${pid}')"></td>
+        <td style="background:${rowBg}"><input class="qty-input${(sv.charge||0)===0?' zero-val':''}" type="number" min="0" id="${pid}_c" value="${sv.charge||0}" style="background:${rowBg}" onfocus="clearIfZero(this)" onblur="restoreIfEmpty(this,'${pid}')" onchange="recalcRow('${pid}')"></td>
+        <td class="total-cell" id="${pid}_t" style="background:${rowBg}">${tot}</td>
+        <td style="background:${rowBg}"><input class="qty-input${(sv.vendue||0)===0?' zero-val':''}" type="number" min="0" id="${pid}_s" value="${sv.vendue||0}" style="background:${rowBg};color:#000;font-weight:900" onfocus="clearIfZero(this)" onblur="restoreIfEmpty(this,'${pid}')" oninput="calcResteFromVendue('${pid}')"></td>
         <td class="${rc}" id="${pid}_r" style="font-weight:800;font-size:12px">${Math.max(0,tot-(+sv.vendue||0))}</td>
         <td><div class="action-cell">
           <button class="btn-edit" onclick="openEditModal('${bar}','${sec.key}','${prod.replace(/'/g,"\\'")}','${pid}',${sec.isWhisky})">✏️</button>
@@ -915,15 +932,16 @@ function collectData(){
     data[sec.key]={};
     (prods[sec.key]||[]).forEach(prod=>{
       const pid=encodeId(bar,sec.key,prod);
-      const v=document.getElementById(pid+'_v'),c=document.getElementById(pid+'_c'),r=document.getElementById(pid+'_r');
+      const v=document.getElementById(pid+'_v');
+      const c=document.getElementById(pid+'_c');
+      const s=document.getElementById(pid+'_s'); // input Produits Vendue
+      const r=document.getElementById(pid+'_r'); // td Restante (calculé)
       if(v){
-        const veille2=+v.value||0;
-        const charge2=+c.value||0;
-        const tot2=veille2+charge2;
-        // Vendue = valeur saisie dans le champ Produits Vendue
-        const vendue2 = +s?.value||0;
-        // Restante = Total - Vendue (calculé)
-        const reste2 = Math.max(0, tot2 - vendue2);
+        const veille2  = +v.value||0;
+        const charge2  = +c.value||0;
+        const tot2     = veille2+charge2;
+        const vendue2  = +s?.value||0;                    // valeur saisie Produits Vendue
+        const reste2   = Math.max(0, tot2 - vendue2);     // calculé = Total - Vendue
         data[sec.key][prod]={veille:veille2, charge:charge2, reste:reste2, vendue:vendue2};
       }
     });
@@ -980,11 +998,11 @@ async function propagateToNextDays(bar, year, month, fromDay, fromData){
   SECTIONS.forEach(sec=>{
     updatedNext[sec.key] = {};
     (prods[sec.key]||[]).forEach(prod=>{
-      const resteJ = fromData[sec.key]?.[prod]?.reste ?? 0;
+      const resteJ = +(fromData[sec.key]?.[prod]?.reste ?? 0); // forcer en nombre
       // Garder charge/reste/vendue existants si J+1 déjà sauvegardé, sinon 0
-      const existingCharge = nextData?.[sec.key]?.[prod]?.charge ?? 0;
-      const existingReste  = nextData?.[sec.key]?.[prod]?.reste  ?? 0;
-      const existingVendue = nextData?.[sec.key]?.[prod]?.vendue ?? 0;
+      const existingCharge = +(nextData?.[sec.key]?.[prod]?.charge ?? 0);
+      const existingReste  = +(nextData?.[sec.key]?.[prod]?.reste  ?? 0);
+      const existingVendue = +(nextData?.[sec.key]?.[prod]?.vendue ?? 0);
       updatedNext[sec.key][prod] = {
         veille: resteJ,          // ← toujours le reste réel de J
         charge: existingCharge,
@@ -1007,7 +1025,7 @@ async function copyFromPrev(){
       (prods[sec.key]||[]).forEach(prod=>{
         const pid=encodeId(currentBar,sec.key,prod);
         const vEl=document.getElementById(pid+'_v');
-        if(vEl&&prev[sec.key]?.[prod]){vEl.value=prev[sec.key][prod].reste||0;recalcRow(pid);}
+        if(vEl&&prev[sec.key]?.[prod]){vEl.value=+(prev[sec.key][prod].reste||0);recalcRow(pid);}
       });
     });
     setSyncStatus('ok','Connecté');
@@ -1122,6 +1140,186 @@ function confirmEdit(){
   if(rEl4){ rEl4.textContent=reste4; rEl4.className=getStatusCls(reste4,isWhisky); }
   refreshSummary();closeModals();showToast(`✓ "${prod}" modifié`);editCtx=null;
 }
+
+// ── NOUVEAU BAR ───────────────────────────────────────────────────────────────
+const PALETTE=[
+  {c:'#1565c0',l:'#e3f2fd'},{c:'#1b7e3a',l:'#e8f5ee'},{c:'#c05c00',l:'#fff3e0'},
+  {c:'#6a1b9a',l:'#f3e5f5'},{c:'#c62828',l:'#ffebee'},{c:'#00838f',l:'#e0f7fa'},
+  {c:'#558b2f',l:'#f1f8e9'},{c:'#ad1457',l:'#fce4ec'},{c:'#4527a0',l:'#ede7f6'},
+  {c:'#37474f',l:'#eceff1'},{c:'#e65100',l:'#fff3e0'},{c:'#00695c',l:'#e0f2f1'}
+];
+let selectedColor=PALETTE[0];
+
+function renderColorPicker(){
+  document.getElementById('color-picker').innerHTML=PALETTE.map((p,i)=>
+    `<div class="color-swatch${i===0?' selected':''}" style="background:${p.c}" onclick="selectColor(${i})"></div>`
+  ).join('');
+}
+function selectColor(i){
+  selectedColor=PALETTE[i];
+  document.querySelectorAll('.color-swatch').forEach((s,j)=>s.classList.toggle('selected',i===j));
+}
+function openNewBarModal(){
+  renderColorPicker();
+  selectedColor=PALETTE[0];
+  document.getElementById('newbar-name').value='';
+  const sel=document.getElementById('copy-src');
+  sel.innerHTML='<option value="">— Aucune copie —</option>'+
+    Object.keys(BARS).map(k=>`<option value="${k}">${BARS[k].name}</option>`).join('');
+  document.getElementById('copy-list-container').innerHTML='';
+  document.getElementById('newbar-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('newbar-name').focus(),100);
+}
+function renderCopyList(){
+  const srcKey=document.getElementById('copy-src').value;
+  const container=document.getElementById('copy-list-container');
+  if(!srcKey){container.innerHTML='';return;}
+  const prods=getProds(srcKey);
+  const secsCopy=[
+    {key:'boissons',label:'🍺 Boissons'},
+    {key:'vins',label:'🍷 Vins'},
+    {key:'whisky',label:'🥃 Whisky & Spiritueux'},
+    {key:'champagne',label:'🍾 Champagne'}
+  ];
+  container.innerHTML='<div class="copy-source-box">'+secsCopy.map(sec=>{
+    const list=prods[sec.key]||[];
+    if(!list.length)return '';
+    return `<div class="copy-section-group">
+      <div class="copy-section-label">${sec.label}
+        <span class="sel-all-btn" onclick="toggleAllSec('${sec.key}',true)">Tout sélectionner</span>
+        <span class="sel-all-btn" onclick="toggleAllSec('${sec.key}',false)" style="margin-left:6px">Tout désélectionner</span>
+      </div>
+      <div class="copy-prod-grid">
+        ${list.map(p=>{
+          const id='chip_'+encodeId('nb',sec.key,p);
+          return `<label class="copy-chip on" id="${id}">
+            <input type="checkbox" data-sec="${sec.key}" value="${p}" checked onchange="this.closest('label').classList.toggle('on',this.checked)">
+            ${p}
+          </label>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('')+'</div>';
+}
+function toggleAllSec(sec,checked){
+  document.querySelectorAll(`#copy-list-container input[data-sec="${sec}"]`).forEach(cb=>{
+    cb.checked=checked; cb.closest('label').classList.toggle('on',checked);
+  });
+}
+async function confirmNewBar(){
+  const name=document.getElementById('newbar-name').value.trim();
+  if(!name){showToast('⚠ Veuillez saisir un nom','#e65100');return;}
+  const key=name.toLowerCase().replace(/[^a-z0-9]/g,'_').replace(/__+/g,'_').replace(/^_|_$/g,'');
+  if(!key){showToast('⚠ Nom invalide','#e65100');return;}
+  if(BARS[key]){showToast('⚠ Un bar avec ce nom existe déjà','#e65100');return;}
+  const newProds={boissons:[],vins:[],whisky:[],champagne:[]};
+  document.querySelectorAll('#copy-list-container input[type=checkbox]:checked').forEach(cb=>{
+    const sec=cb.dataset.sec; if(newProds[sec])newProds[sec].push(cb.value);
+  });
+  BARS[key]={name,color:selectedColor.c,colorLight:selectedColor.l,products:newProds};
+  try{await dbSaveConfig(BARS);}catch(e){showToast('⚠ Erreur sauvegarde config','#c0392b');}
+  closeModals(); renderTabs(); switchBar(key);
+  showToast(`✓ Bar "${name}" créé !`);
+}
+
+// ── SUPPRIMER BAR ─────────────────────────────────────────────────────────────
+let barToDelete=null;
+function askDeleteBar(e,key){
+  e.stopPropagation(); barToDelete=key;
+  document.getElementById('delbar-msg').textContent=`Supprimer "${BARS[key].name}" et tous ses produits ?`;
+  document.getElementById('delbar-modal').classList.add('open');
+}
+async function confirmDeleteBar(){
+  if(!barToDelete)return;
+  const name=BARS[barToDelete].name;
+  delete BARS[barToDelete];
+  try{await dbSaveConfig(BARS);}catch(e){}
+  closeModals();barToDelete=null;
+  const first=Object.keys(BARS)[0];
+  renderTabs();switchBar(first);
+  showToast(`✓ Bar "${name}" supprimé`,'#c0392b');
+}
+
+// ── SYNC PRODUITS PAR DÉFAUT ──────────────────────────────────────────────────
+async function resetDefaultProducts(){
+  if(!confirm('Forcer la synchronisation des produits par défaut pour TOUS les bars ?\n\nCela ajoutera les catégories manquantes sans supprimer tes produits ajoutés manuellement.')) return;
+  let updated=false;
+  Object.keys(DEFAULT_BARS).forEach(barKey=>{
+    if(!BARS[barKey])return;
+    Object.keys(DEFAULT_BARS[barKey].products).forEach(cat=>{
+      const def=DEFAULT_BARS[barKey].products[cat];
+      const cur=BARS[barKey].products[cat];
+      if((!cur||cur.length===0)&&def&&def.length>0){
+        BARS[barKey].products[cat]=[...def];
+        if(BARS[barKey].__emptied?.[cat])delete BARS[barKey].__emptied[cat];
+        updated=true;
+      }
+    });
+  });
+  if(updated){
+    try{await dbSaveConfig(BARS);renderTabs();switchBar(currentBar);showToast('✓ Produits par défaut synchronisés !');}
+    catch(e){showToast('⚠ Erreur de synchronisation','#c0392b');}
+  }else{showToast('✓ Tous les produits sont déjà à jour');}
+}
+
+// ── CORRIGER BASE ─────────────────────────────────────────────────────────────
+function openFixModal(){
+  document.getElementById('fix-progress').style.display='none';
+  document.getElementById('fix-log').innerHTML='';
+  document.getElementById('fix-run-btn').disabled=false;
+  document.getElementById('fix-run-btn').textContent='🔧 Lancer la correction';
+  document.getElementById('fix-modal').classList.add('open');
+}
+function fixLog(msg,color='#555'){
+  const log=document.getElementById('fix-log');
+  log.innerHTML+=`<div style="color:${color};margin-bottom:3px">${msg}</div>`;
+  log.scrollTop=log.scrollHeight;
+}
+async function runDatabaseFix(){
+  const btn=document.getElementById('fix-run-btn');
+  btn.disabled=true; btn.textContent='⏳ Correction en cours...';
+  document.getElementById('fix-progress').style.display='block';
+  document.getElementById('fix-log').innerHTML='';
+  const{year,month}=getSelDate();
+  const maxDay=getDaysInMonth(year,month);
+  let totalFixed=0,totalChecked=0;
+  fixLog(`📅 Correction du mois ${MONTHS[month]} ${year}`,'#1a237e');
+  fixLog(`🔍 Vérification de tous les bars sur ${maxDay} jours...`,'#555');
+  for(const barKey of Object.keys(BARS)){
+    const barName=BARS[barKey].name;
+    fixLog(`\n🏠 ${barName}`,'#3949ab');
+    const prods=getProds(barKey);
+    for(let d=1;d<=maxDay;d++){
+      try{
+        const dayData=await dbGet(barKey,year,month,d);
+        if(!dayData)continue;
+        let dayModified=false;
+        const newData={};
+        SECTIONS.forEach(sec=>{
+          newData[sec.key]={};
+          (prods[sec.key]||[]).forEach(prod=>{
+            const sv=dayData[sec.key]?.[prod];
+            if(!sv){newData[sec.key][prod]={veille:0,charge:0,reste:0,vendue:0};return;}
+            let veille=+(sv.veille||0), charge=+(sv.charge||0), reste=+(sv.reste||0), vendue=+(sv.vendue||0);
+            if(charge===0&&reste===0&&veille>0){
+              reste=veille;vendue=0;dayModified=true;
+              fixLog(`  ✓ Jour ${d} — ${prod}: reste 0→${reste}`,'#2e7d32');
+              totalFixed++;
+            }
+            newData[sec.key][prod]={veille,charge,reste,vendue};
+            totalChecked++;
+          });
+        });
+        if(dayModified)await dbSave(barKey,year,month,d,newData);
+      }catch(e){fixLog(`  ⚠ Jour ${d} — erreur: ${e.message}`,'#c0392b');}
+    }
+  }
+  fixLog(`\n✅ Correction terminée !`,'#1b7e3a');
+  fixLog(`📊 ${totalChecked} entrées vérifiées, ${totalFixed} corrections appliquées`,'#1b7e3a');
+  btn.textContent='✓ Terminé'; btn.style.background='#1b7e3a';
+  await loadDay(); showToast(`✓ ${totalFixed} corrections appliquées`);
+}
+
 // ── UTILS ─────────────────────────────────────────────────────────────────────
 function closeModals(){document.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('open'));}
 function showToast(msg,bg='#1b7e3a'){
@@ -1295,9 +1493,21 @@ function startAutoSync(){
             const fd = fresh[sec.key]?.[prod];
             if(!fd) return;
             // Ne mettre à jour que si la valeur vient d'une autre machine
-            if(+vEl.value !== (fd.veille||0)){ vEl.value=fd.veille||0; updated=true; }
-            if(+cEl.value !== (fd.charge||0)){ cEl.value=fd.charge||0; updated=true; }
-            if(+rEl.value !== (fd.reste||0)){ rEl.value=fd.reste||0; updated=true; }
+            if(+vEl.value !== (+(fd.veille)||0)){ vEl.value=+(fd.veille)||0; updated=true; }
+            if(+cEl.value !== (+(fd.charge)||0)){ cEl.value=+(fd.charge)||0; updated=true; }
+            // rEl est un td (textContent), pas un input
+            const rVal = rEl.tagName==='INPUT' ? +rEl.value||0 : +rEl.textContent||0;
+            const fdReste=+(fd.reste||0);
+            if(rVal !== fdReste){
+              if(rEl.tagName==='INPUT') rEl.value=fdReste;
+              else rEl.textContent=fdReste;
+              updated=true;
+            }
+            // Mettre à jour vendue input (sEl)
+            const sEl2=document.getElementById(pid+'_s');
+            const fdVendue=+(fd.vendue||0);
+            if(sEl2 && +sEl2.value !== fdVendue){ sEl2.value=fdVendue; updated=true; }
+
             if(updated){
               recalcRow(pid);
               const sec2=SECTIONS.find(s=>s.key===sec.key);
