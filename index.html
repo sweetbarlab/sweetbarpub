@@ -61,7 +61,7 @@ body{font-family:Arial,sans-serif;background:#f4f6fa;color:#1a1a2e;min-height:10
 .legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:#444}
 .legend-dot{width:14px;height:14px;border-radius:4px}
 /* CONTENT */
-#content{padding:18px 20px}
+#content{padding:10px 10px}
 .summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
 .stat-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 16px;text-align:center;box-shadow:var(--shadow);cursor:pointer;transition:all .18s}
 .stat-card:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.13)}
@@ -83,21 +83,31 @@ body{font-family:Arial,sans-serif;background:#f4f6fa;color:#1a1a2e;min-height:10
 /* SECTIONS */
 .section-block{background:#fff;border:1px solid var(--border);border-radius:12px;margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow)}
 .section-block.all-hidden{display:none}
-.section-header{padding:10px 16px;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:space-between}
+.section-header{padding:7px 10px;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:space-between}
 .sec-boisson{background:#e3f2fd;border-left:5px solid #1565c0;color:#0d47a1}
 .sec-vin{background:#f3e5f5;border-left:5px solid #7b1fa2;color:#4a148c}
 .sec-whisky{background:#fff3e0;border-left:5px solid #e65100;color:#bf360c}
 .sec-champagne{background:#fce4ec;border-left:5px solid #880e4f;color:#560027}
 /* TABLE */
 .stock-table{width:100%;border-collapse:collapse}
-.stock-table th{background:#f4f6fa;color:#555;font-size:11px;text-transform:uppercase;letter-spacing:.5px;padding:8px 10px;text-align:center;border-bottom:1px solid var(--border);font-weight:700}
-.stock-table th:first-child{text-align:left}
-.stock-table td{padding:7px 10px;border-bottom:1px solid #eef0f5;font-size:13px;text-align:center;color:#333}
-.stock-table td:first-child{text-align:left;color:#1a1a2e;font-weight:600}
+.stock-table th{background:#f4f6fa;color:#555;font-size:10px;text-transform:uppercase;letter-spacing:.3px;padding:6px 5px;text-align:center;border-bottom:1px solid var(--border);font-weight:700}
+.stock-table th:first-child{text-align:left;padding-left:8px}
+.stock-table td{padding:5px 4px;border-bottom:1px solid #eef0f5;font-size:12px;text-align:center;color:#333}
+.stock-table td:first-child{text-align:left;color:#1a1a2e;font-weight:600;padding-left:8px;font-size:12px}
 .stock-table tr:last-child td{border-bottom:none}
 .stock-table tr:hover td{background:#f8f9ff}
 tr.hidden-row{display:none}
-.qty-input{width:70px;background:#f4f6fa;color:#1a237e;border:1px solid #c5cae9;border-radius:6px;padding:5px 7px;font-size:13px;text-align:center;outline:none;font-weight:700}
+.qty-input{width:58px;background:#f4f6fa;color:#1a237e;border:1px solid #c5cae9;border-radius:5px;padding:4px 3px;font-size:12px;text-align:center;outline:none;font-weight:700}
+/* Responsive mobile */
+@media(max-width:600px){
+  .stock-table th{font-size:9px;padding:5px 3px}
+  .stock-table td{padding:4px 3px;font-size:11px}
+  .stock-table td:first-child{font-size:11px;padding-left:5px;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .qty-input{width:50px;font-size:11px;padding:3px 2px}
+  .total-cell{font-size:12px}
+  .vendue-cell{font-size:12px}
+  .action-cell .btn-edit,.action-cell .btn-del{padding:1px 4px;font-size:13px}
+}
 .qty-input:focus{border-color:#3949ab;background:#fff}
 .qty-input::placeholder{color:#bbb;font-weight:400;font-size:12px}
 .qty-input.zero-val{color:#ccc;}
@@ -109,7 +119,7 @@ tr.hidden-row{display:none}
 .vendue-cell{background:#fff3e0;border-left:2px solid #ffcc80}
 /* Scroll horizontal mobile */
 .section-block{overflow-x:auto;-webkit-overflow-scrolling:touch}
-.stock-table{min-width:680px}
+.stock-table{min-width:520px}
 .stock-table th,.stock-table td{white-space:nowrap}
 .rest-rouge{background:#fff0f0!important;color:#c0392b!important;border-color:#e74c3c!important;font-weight:800}
 .rest-jaune{background:#fffbe6!important;color:#7d5c00!important;border-color:#f39c12!important;font-weight:800}
@@ -612,13 +622,13 @@ function renderSections(saved){
     html+=`<div class="section-block"><div class="section-header ${sec.cls}">
       <span>${sec.label} <span style="font-size:11px;opacity:.7">(${list.length})</span></span>
     </div><table class="stock-table"><thead><tr>
-      <th style="width:24%">Produit</th>
-      <th>Qt Restante<br><small>veille</small></th>
-      <th>Qt Chargée<br><small>auj.</small></th>
-      <th>TOTAL<br><small>dispo</small></th>
-      <th style="background:#fff3e0;color:#bf360c">Qt Vendue<br><small>journée</small></th>
-      <th>Qt Restante<br><small>fin journée</small></th>
-      <th style="width:56px"></th>
+      <th style="width:22%">Produit</th>
+      <th>Veille</th>
+      <th>Chargée</th>
+      <th>Total</th>
+      <th style="background:#fff3e0;color:#bf360c">Vendue</th>
+      <th>Restante<br><small>fin J.</small></th>
+      <th style="width:48px"></th>
     </tr></thead><tbody>`;
     list.forEach(prod=>{
       const pid=encodeId(bar,sec.key,prod);
