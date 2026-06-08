@@ -91,11 +91,13 @@ body{font-family:Arial,sans-serif;background:#f4f6fa;color:#1a1a2e;min-height:10
 /* TABLE */
 .stock-table{width:100%;border-collapse:collapse}
 .stock-table th{background:#f4f6fa;color:#555;font-size:9px;text-transform:uppercase;letter-spacing:.2px;padding:5px 2px;text-align:center;border-bottom:1px solid var(--border);font-weight:700}
-.stock-table th:first-child{text-align:left;padding-left:6px}
+.stock-table th:first-child{text-align:left;padding-left:6px;position:sticky;left:0;z-index:3;background:#f4f6fa;box-shadow:2px 0 4px rgba(0,0,0,.08)}
 .stock-table td{padding:4px 2px;border-bottom:1px solid #eef0f5;font-size:11px;text-align:center;color:#333}
-.stock-table td:first-child{text-align:left;color:#1a1a2e;font-weight:600;padding-left:6px;font-size:11px}
+.stock-table td:first-child{text-align:left;color:#1a1a2e;font-weight:600;padding-left:6px;font-size:11px;position:sticky;left:0;z-index:2;background:#fff;box-shadow:2px 0 4px rgba(0,0,0,.08)}
+.stock-table tr:hover td:first-child{background:#f8f9ff}
 .stock-table tr:last-child td{border-bottom:none}
 .stock-table tr:hover td{background:#f8f9ff}
+.stock-table tr:hover td:first-child{background:#f8f9ff}
 tr.hidden-row{display:none}
 .qty-input{width:52px;background:#f4f6fa;color:#1a237e;border:1px solid #c5cae9;border-radius:4px;padding:3px 2px;font-size:11px;text-align:center;outline:none;font-weight:700}
 .total-cell{font-size:12px}
