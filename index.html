@@ -832,12 +832,18 @@ async function confirmAddProduct(){
   if((prods[cat]||[]).includes(name)){showToast('⚠ Produit déjà existant','#e65100');return;}
   if(!BARS[currentBar].products[cat])BARS[currentBar].products[cat]=[];
   BARS[currentBar].products[cat].push(name);
+  if(BARS[currentBar].__emptied?.[cat]) delete BARS[currentBar].__emptied[cat];
   try{await dbSaveConfig(BARS);}catch(e){showToast('⚠ Erreur synchro','#e65100');}
   closeModals();loadDay();showToast(`✓ "${name}" ajouté`);
 }
 async function deleteProduct(bar,sec,prod){
   if(!confirm(`Supprimer "${prod}" ?`))return;
   BARS[bar].products[sec]=BARS[bar].products[sec].filter(p=>p!==prod);
+  // Marquer la catégorie comme vidée volontairement si elle est vide
+  if(BARS[bar].products[sec].length===0){
+    if(!BARS[bar].__emptied) BARS[bar].__emptied={};
+    BARS[bar].__emptied[sec]=true;
+  }
   try{await dbSaveConfig(BARS);}catch(e){}
   loadDay();showToast(`✓ "${prod}" supprimé`);
 }
@@ -1113,7 +1119,35 @@ async function initApp(){
   document.getElementById('loading-msg').textContent='Connexion à Supabase...';
   try{
     const cfg=await dbGetConfig();
-    if(cfg&&cfg.cissin){BARS=cfg;}
+    if(cfg&&cfg.cissin){
+      BARS=cfg;
+      // Ajouter les produits manquants des nouvelles catégories SEULEMENT si absents
+      // (ne pas écraser les catégories vidées volontairement par l'utilisateur)
+      let needsUpdate = false;
+      Object.keys(DEFAULT_BARS).forEach(barKey=>{
+        if(!BARS[barKey]) return;
+        // Vérifier si la clé __version__ de la catégorie est absente → première fois
+        Object.keys(DEFAULT_BARS[barKey].products).forEach(cat=>{
+          // Si la catégorie n'existe PAS du tout dans la config sauvegardée → l'ajouter
+          if(BARS[barKey].products[cat] === undefined){
+            BARS[barKey].products[cat] = DEFAULT_BARS[barKey].products[cat];
+            needsUpdate = true;
+          }
+          // Si la catégorie existe mais n'a JAMAIS été modifiée (identique à []) ET que
+          // les défauts ont des produits ET que la config n'a pas de marqueur "vidé_volontairement"
+          else if(
+            Array.isArray(BARS[barKey].products[cat]) &&
+            BARS[barKey].products[cat].length === 0 &&
+            DEFAULT_BARS[barKey].products[cat].length > 0 &&
+            !BARS[barKey].__emptied?.[cat]  // pas vidé volontairement
+          ){
+            BARS[barKey].products[cat] = DEFAULT_BARS[barKey].products[cat];
+            needsUpdate = true;
+          }
+        });
+      });
+      if(needsUpdate) await dbSaveConfig(BARS);
+    }
     else{await dbSaveConfig(BARS);}
     document.getElementById('loading-screen').style.display='none';
     ['app-header','main-nav','toolbar','legend-bar','content'].forEach(id=>{
