@@ -81,7 +81,7 @@ body{font-family:Arial,sans-serif;background:#f4f6fa;color:#1a1a2e;min-height:10
 #filter-banner.tout{background:#e8eaf6;color:#3949ab;border:1.5px solid #5c6bc0}
 .btn-clear-filter{background:none;border:1px solid currentColor;border-radius:6px;padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer;color:inherit}
 /* SECTIONS */
-.section-block{background:#fff;border:1px solid var(--border);border-radius:12px;margin-bottom:14px;overflow-x:auto;overflow-y:hidden;box-shadow:var(--shadow)}
+.section-block{background:#fff;border:1px solid var(--border);border-radius:12px;margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow)}
 .section-block.all-hidden{display:none}
 .section-header{padding:7px 10px;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:space-between}
 .sec-boisson{background:#e3f2fd;border-left:5px solid #1565c0;color:#0d47a1}
@@ -127,6 +127,7 @@ tr.hidden-row{display:none}
 .vendue-cell{background:#fff3e0;border-left:2px solid #ffcc80}
 /* Scroll horizontal mobile */
 .section-block{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.table-scroll-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%}
 .stock-table{min-width:440px;table-layout:fixed;width:100%}
 .stock-table th,.stock-table td{white-space:nowrap}
 .stock-table col.c-prod{width:22%}
@@ -632,7 +633,7 @@ function renderSections(saved){
     if(!list.length)return;
     html+=`<div class="section-block"><div class="section-header ${sec.cls}">
       <span>${sec.label} <span style="font-size:11px;opacity:.7">(${list.length})</span></span>
-    </div><table class="stock-table">
+    </div><div class="table-scroll-wrap"><table class="stock-table">
     <colgroup>
       <col class="c-prod">
       <col class="c-num"><col class="c-num"><col class="c-num">
@@ -640,7 +641,7 @@ function renderSections(saved){
       <col class="c-act">
     </colgroup>
     <thead><tr>
-      <th style="padding:4px 3px;text-align:left"></th>
+      <th style="padding:4px 3px;text-align:left;position:sticky;left:0;z-index:3;background:#f4f6fa">Produit</th>
       <th>Produits<br><small>Veille</small></th>
       <th>Produits<br><small>Chargée</small></th>
       <th>Total<br><small>Produits</small></th>
@@ -668,7 +669,7 @@ function renderSections(saved){
         </div></td>
       </tr>`;
     });
-    html+=`</tbody></table></div>`;
+    html+=`</tbody></table></div></div>`;
   });
   document.getElementById('stock-sections').innerHTML=html;
   renderSummaryCards(bn,bc,total,rouge,jaune,vert);
