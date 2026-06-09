@@ -233,7 +233,7 @@ tr.hidden-row{display:none}
 .hbtn-admin{background:#7c4dff;color:#fff;box-shadow:0 2px 8px rgba(124,77,255,.4)}.hbtn-admin:hover{background:#651fff;transform:translateY(-1px)}
 .hbtn-logout{background:#ef5350;color:#fff;box-shadow:0 2px 8px rgba(239,83,80,.4)}.hbtn-logout:hover{background:#e53935;transform:translateY(-1px)}
 .hbtn-pwd{background:#0288d1;color:#fff;box-shadow:0 2px 8px rgba(2,136,209,.4)}.hbtn-pwd:hover{background:#0277bd;transform:translateY(-1px)}
-#current-user-badge{font-size:11px;color:#c5cae9;padding:4px 10px;background:rgba(255,255,255,.1);border-radius:20px;white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis}
+#current-user-badge{font-size:12px;font-weight:800;color:#1a237e;padding:6px 14px;background:linear-gradient(135deg,#ffd600,#ffab00);border-radius:20px;white-space:nowrap;max-width:150px;overflow:hidden;text-overflow:ellipsis;box-shadow:0 2px 8px rgba(255,214,0,.5);letter-spacing:.3px}
 </style>
 </head>
 <body>
@@ -2198,6 +2198,7 @@ function doLogout(){
   if(!confirm('Voulez-vous vous déconnecter ?')) return;
   sessionStorage.removeItem('sb_user');
   currentUser = null;
+  window._barRestricted = null; // Supprimer la restriction de bar
   document.getElementById('login-username').value = '';
   document.getElementById('login-password').value = '';
   document.getElementById('login-error').style.display = 'none';
