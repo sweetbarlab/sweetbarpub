@@ -966,7 +966,7 @@ function renderSections(saved){
         <td style="background:${rowBg}"><input class="qty-input${(sv.veille||0)===0?' zero-val':''}" type="number" min="0" id="${pid}_v" value="${sv.veille||0}" style="background:${rowBg}" onfocus="clearIfZero(this)" onblur="restoreIfEmpty(this,'${pid}')" onchange="recalcRow('${pid}')"></td>
         <td style="background:${rowBg}"><input class="qty-input${(sv.charge||0)===0?' zero-val':''}" type="number" min="0" id="${pid}_c" value="${sv.charge||0}" style="background:${rowBg}" onfocus="clearIfZero(this)" onblur="restoreIfEmpty(this,'${pid}')" onchange="recalcRow('${pid}')"></td>
         <td class="total-cell" id="${pid}_t" style="background:${rowBg}">${tot}</td>
-        <td style="background:${rowBg}"><input class="qty-input${(sv.vendue||0)===0?' zero-val':''}${tot===0?' vendue-disabled':''}" type="number" min="0" id="${pid}_s" value="${sv.vendue||0}" ${tot===0?'disabled tabindex="-1" readonly':''} style="background:${tot===0?'#e8e8e8':rowBg};color:${tot===0?'#999':'#000'};font-weight:900" onfocus="${tot===0?'this.blur();return false;':''};clearIfZero(this)" onblur="restoreIfEmpty(this,'${pid}')" oninput="calcResteFromVendue('${pid}')"></td>
+        <td style="background:${rowBg}"><input class="qty-input${(sv.vendue||0)===0?' zero-val':''}${tot===0?' vendue-disabled':''}" type="number" min="0" id="${pid}_s" value="${sv.vendue||0}" style="background:${tot===0?'#e8e8e8':rowBg};color:${tot===0?'#999':'#000'};font-weight:900" onfocus="clearIfZero(this)" onblur="restoreIfEmpty(this,'${pid}')" oninput="calcResteFromVendue('${pid}')"></td>
         <td class="${rc}" id="${pid}_r" style="font-weight:800;font-size:12px">${Math.max(0,tot-(+sv.vendue||0))}</td>
         <td><div class="action-cell">
           <button class="btn-edit" onclick="openEditModal('${bar}','${sec.key}','${prod.replace(/'/g,"\\'")}','${pid}',${sec.isWhisky})">✏️</button>
@@ -978,6 +978,26 @@ function renderSections(saved){
   });
   document.getElementById('stock-sections').innerHTML=html;
   renderSummaryCards(bn,bc,total,rouge,jaune,vert);
+  // Appliquer l'état disabled/readonly sur les champs vendue selon le Total
+  SECTIONS.forEach(sec=>{
+    (prods[sec.key]||[]).forEach(prod=>{
+      const pid = encodeId(bar, sec.key, prod);
+      const tEl = document.getElementById(pid+'_t');
+      const sEl = document.getElementById(pid+'_s');
+      if(tEl && sEl){
+        const tot = +tEl.textContent||0;
+        if(tot === 0){
+          sEl.disabled = true;
+          sEl.readOnly = true;
+          sEl.setAttribute('tabindex','-1');
+        } else {
+          sEl.disabled = false;
+          sEl.readOnly = false;
+          sEl.removeAttribute('tabindex');
+        }
+      }
+    });
+  });
   if(activeFilter)applyFilter(activeFilter);
 }
 
