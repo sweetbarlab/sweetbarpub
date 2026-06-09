@@ -271,9 +271,9 @@ tr.hidden-row{display:none}
     <!-- Étape 2 : afficher le code + saisir email de confirmation -->
     <div id="recover-step2" class="recover-step">
       <div style="background:#e3f2fd;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#1565c0;line-height:1.5">
-        ✉ Un code a été envoyé à <strong>zoungigor@gmail.com</strong>. Il est valable <strong>10 minutes</strong>.
+        ✉ Un code à 6 chiffres a été envoyé à <strong>zoungigor@gmail.com</strong>.<br>Il est valable <strong>10 minutes</strong>. Vérifiez vos spams si nécessaire.
       </div>
-      <div class="code-display" id="recover-code-display" style="font-size:13px;letter-spacing:2px;color:#90a4ae">Code affiché si email non reçu</div>
+
       <div class="code-timer" id="recover-timer">⏳ Valable 10:00</div>
       <div style="margin-bottom:12px">
         <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:5px">Saisissez le code reçu par email</label>
@@ -283,6 +283,22 @@ tr.hidden-row{display:none}
       <div class="modal-actions">
         <button class="btn-cancel" onclick="closeModals()">Annuler</button>
         <button class="btn-confirm" onclick="recoverStep2()">Vérifier le code →</button>
+      </div>
+    </div>
+
+    <!-- Étape PIN de secours -->
+    <div id="recover-step-pin" class="recover-step">
+      <div style="background:#fff3e0;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#e65100;line-height:1.5">
+        📵 Email indisponible. Saisissez votre <strong>code PIN de secours</strong> pour continuer.
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:5px">Code PIN de secours</label>
+        <input type="password" id="recover-pin-input" class="login-field" placeholder="Votre PIN (4-8 chiffres)" maxlength="8" inputmode="numeric" style="margin-bottom:0;text-align:center;font-size:20px;letter-spacing:4px">
+      </div>
+      <div id="recover-pin-error" style="color:#e53935;font-size:12px;font-weight:600;margin-bottom:10px;display:none"></div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModals()">Annuler</button>
+        <button class="btn-confirm" onclick="recoverStepPin()">Vérifier le PIN →</button>
       </div>
     </div>
 
@@ -332,9 +348,17 @@ tr.hidden-row{display:none}
       <input type="password" id="pwd-confirm" class="login-field" placeholder="Confirmer le nouveau mot de passe" style="margin-bottom:0">
     </div>
     <div id="change-pwd-error" style="color:#e53935;font-size:12px;font-weight:600;margin-bottom:10px;display:none"></div>
+    <hr style="border:none;border-top:1px solid #e0e0e0;margin:16px 0">
+    <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:8px">🔐 Code PIN de secours (facultatif)</div>
+    <div style="background:#fff8e1;border-radius:8px;padding:10px;margin-bottom:12px;font-size:11px;color:#e65100">
+      ⚠ Ce PIN sera utilisé si l'envoi d'email échoue. Gardez-le secret.
+    </div>
+    <input type="password" id="new-recovery-pin" class="login-field" placeholder="PIN de secours (4-8 chiffres)" maxlength="8" inputmode="numeric" style="margin-bottom:8px">
+    <input type="password" id="new-recovery-pin2" class="login-field" placeholder="Confirmer le PIN" maxlength="8" inputmode="numeric" style="margin-bottom:0">
+    <div id="pin-save-msg" style="font-size:11px;margin-top:6px;display:none"></div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModals()">Annuler</button>
-      <button class="btn-confirm" onclick="changePassword()" style="background:#0288d1">🔑 Changer le mot de passe</button>
+      <button class="btn-confirm" onclick="changePassword()" style="background:#0288d1">🔑 Enregistrer</button>
     </div>
   </div>
 </div>
@@ -1858,7 +1882,7 @@ let recoverTimerInterval = null;
 
 function openRecoverModal(){
   // Réinitialiser toutes les étapes
-  ['recover-step1','recover-step2','recover-step3'].forEach(id=>{
+  ['recover-step1','recover-step2','recover-step-pin','recover-step3'].forEach(id=>{
     document.getElementById(id).classList.remove('active');
   });
   document.getElementById('recover-step1').classList.add('active');
@@ -1896,38 +1920,48 @@ async function recoverStep1(){
   if(btn){ btn.textContent = '⏳ Envoi en cours...'; btn.disabled = true; }
 
   // Envoyer le code par email via EmailJS
-  let emailSent = false;
   try{
     if(typeof emailjs === 'undefined'){
       throw new Error('SDK EmailJS non chargé');
     }
     emailjs.init(EMAILJS_PUBLIC_KEY);
-    const result = await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
       to_name:       username,
       to_email:      ADMIN_RECOVERY_EMAIL,
       recovery_code: recoverCode,
       app_name:      'Sweet Bar Pub',
     });
-    console.log('EmailJS success:', result);
-    emailSent = true;
+    // Email envoyé avec succès → code JAMAIS affiché dans l'app
+    const codeEl = document.getElementById('recover-code-display');
+    if(codeEl) codeEl.style.display = 'none';
     showToast('✉ Code envoyé à ' + ADMIN_RECOVERY_EMAIL);
   }catch(e){
+    // Email échoué → vérifier si un PIN de secours existe
     console.error('EmailJS error:', e.text || e.message || e);
-    // Afficher l'erreur précise dans le toast
-    const errMsg = e.text || e.message || 'Erreur inconnue';
-    showToast('⚠ Email non envoyé (' + errMsg + ')', '#e65100');
+    if(btn){ btn.textContent = 'Suivant →'; btn.disabled = false; }
+
+    const users2 = await loadUsers();
+    const hasPIN = users2[username]?.recoveryPinHash;
+
+    if(hasPIN){
+      // PIN de secours disponible → proposer cette option
+      recoverCode = null; recoverExpiry = null;
+      // Passer directement à l'étape PIN
+      document.getElementById('recover-step1').classList.remove('active');
+      document.getElementById('recover-step-pin').classList.add('active');
+      document.getElementById('recover-pin-input').value = '';
+      document.getElementById('recover-pin-error').style.display = 'none';
+      setTimeout(()=>document.getElementById('recover-pin-input').focus(), 200);
+      showToast('⚠ Email indisponible — utilisez votre PIN de secours', '#e65100');
+    } else {
+      // Pas de PIN → bloquer complètement
+      recoverCode = null; recoverExpiry = null; recoverUsername = null;
+      errEl.textContent = "❌ Email non envoyé et aucun PIN de secours configuré. Contactez le support.";
+      errEl.style.display = 'block';
+    }
+    return;
   }finally{
     if(btn){ btn.textContent = 'Suivant →'; btn.disabled = false; }
-  }
-
-  // Afficher le code à l'écran (toujours visible comme sécurité)
-  document.getElementById('recover-code-display').textContent = recoverCode;
-  // Si email envoyé : masquer le code après 3 secondes
-  if(emailSent){
-    setTimeout(()=>{
-      const el = document.getElementById('recover-code-display');
-      if(el) el.textContent = '(code envoyé par email)';
-    }, 3000);
   }
 
   // Passer à l'étape 2
@@ -1950,6 +1984,25 @@ async function recoverStep1(){
       recoverCode = null;
     }
   }, 1000);
+}
+
+async function recoverStepPin(){
+  const errEl = document.getElementById('recover-pin-error');
+  errEl.style.display = 'none';
+  const pin = document.getElementById('recover-pin-input').value.trim();
+  if(!pin){ errEl.textContent = '❌ Saisissez votre PIN'; errEl.style.display='block'; return; }
+
+  const users = await loadUsers();
+  const user = users[recoverUsername];
+  if(!user || !user.recoveryPinHash){ errEl.textContent = '❌ Aucun PIN configuré'; errEl.style.display='block'; return; }
+
+  const pinHash = await hashPassword(pin + '_pin');
+  if(pinHash !== user.recoveryPinHash){ errEl.textContent = '❌ PIN incorrect'; errEl.style.display='block'; return; }
+
+  // PIN correct → passer à l'étape 3
+  document.getElementById('recover-step-pin').classList.remove('active');
+  document.getElementById('recover-step3').classList.add('active');
+  setTimeout(()=>document.getElementById('recover-new-pwd').focus(), 200);
 }
 
 function recoverStep2(){
@@ -2176,10 +2229,31 @@ async function changePassword(){
     users[targetUsername].hash = newHash;
     await saveUsers(users);
 
+    // Sauvegarder le PIN de secours si renseigné
+    const pinEl  = document.getElementById('new-recovery-pin');
+    const pinEl2 = document.getElementById('new-recovery-pin2');
+    const pinMsg = document.getElementById('pin-save-msg');
+    if(pinEl && pinEl.value){
+      const pin = pinEl.value.trim();
+      const pin2 = pinEl2 ? pinEl2.value.trim() : '';
+      if(!/^\d{4,8}$/.test(pin)){
+        if(pinMsg){ pinMsg.textContent = '⚠ PIN invalide (4-8 chiffres uniquement)'; pinMsg.style.color='#e53935'; pinMsg.style.display='block'; }
+        return;
+      }
+      if(pin !== pin2){
+        if(pinMsg){ pinMsg.textContent = '⚠ Les PIN ne correspondent pas'; pinMsg.style.color='#e53935'; pinMsg.style.display='block'; }
+        return;
+      }
+      const pinHash = await hashPassword(pin + '_pin');
+      users[targetUsername].recoveryPinHash = pinHash;
+      await saveUsers(users);
+    }
+
     closeModals();
+    const hasPIN = pinEl && pinEl.value ? ' + PIN de secours' : '';
     const msg = targetUsername === currentUser.username
-      ? "✓ Votre mot de passe a été modifié !"
-      : `✓ Mot de passe de "${targetUsername}" modifié !`;
+      ? `✓ Mot de passe${hasPIN} enregistré !`
+      : `✓ Mot de passe de "${targetUsername}"${hasPIN} modifié !`;
     showToast(msg);
 
   }catch(e){
