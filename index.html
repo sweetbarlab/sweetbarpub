@@ -210,6 +210,10 @@ tr.hidden-row{display:none}
 .login-version{font-size:10px;color:#bdbdbd;margin-top:16px}
 .login-link{color:#3949ab;font-size:12px;cursor:pointer;text-decoration:underline;margin-top:10px;display:inline-block}
 .login-link:hover{color:#1a237e}
+.pwd-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:#90a4ae;padding:4px;line-height:1}
+.pwd-toggle:hover{color:#3949ab}
+.pwd-wrap{position:relative;margin-bottom:12px}
+.pwd-wrap .login-field{margin-bottom:0;padding-right:40px}
 .recover-step{display:none}
 .recover-step.active{display:block}
 .code-display{font-size:28px;font-weight:900;letter-spacing:8px;color:#1a237e;background:#e8eaf6;border-radius:10px;padding:12px;text-align:center;margin:14px 0;font-family:monospace}
@@ -242,7 +246,10 @@ tr.hidden-row{display:none}
     <div class="login-title">Sweet Bar Pub</div>
     <div class="login-sub">Suivi Stock — Connexion requise</div>
     <input type="text" id="login-username" class="login-field" placeholder="Nom d'utilisateur" autocomplete="username" autocapitalize="none">
-    <input type="password" id="login-password" class="login-field" placeholder="Mot de passe" autocomplete="current-password">
+    <div class="pwd-wrap">
+      <input type="password" id="login-password" class="login-field" placeholder="Mot de passe" autocomplete="current-password">
+      <button type="button" class="pwd-toggle" onclick="togglePwd('login-password',this)" title="Afficher/masquer">👁</button>
+    </div>
     <div id="login-error">❌ Identifiants incorrects</div>
     <button class="login-btn" onclick="doLogin()">Se connecter</button>
     <span class="login-link" onclick="openRecoverModal()">🔓 Mot de passe oublié ?</span>
@@ -310,11 +317,11 @@ tr.hidden-row{display:none}
       </div>
       <div style="margin-bottom:12px">
         <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:5px">Nouveau mot de passe</label>
-        <input type="password" id="recover-new-pwd" class="login-field" placeholder="Nouveau mot de passe" style="margin-bottom:0">
+        <div class="pwd-wrap"><input type="password" id="recover-new-pwd" class="login-field" placeholder="Nouveau mot de passe"><button type="button" class="pwd-toggle" onclick="togglePwd('recover-new-pwd',this)">👁</button></div>
       </div>
       <div style="margin-bottom:16px">
         <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:5px">Confirmer</label>
-        <input type="password" id="recover-confirm-pwd" class="login-field" placeholder="Confirmer le mot de passe" style="margin-bottom:0">
+        <div class="pwd-wrap"><input type="password" id="recover-confirm-pwd" class="login-field" placeholder="Confirmer le mot de passe"><button type="button" class="pwd-toggle" onclick="togglePwd('recover-confirm-pwd',this)">👁</button></div>
       </div>
       <div id="recover-step3-error" style="color:#e53935;font-size:12px;font-weight:600;margin-bottom:10px;display:none"></div>
       <div class="modal-actions">
@@ -338,15 +345,15 @@ tr.hidden-row{display:none}
     </div>
     <div style="margin-bottom:12px">
       <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:5px">Votre mot de passe admin (confirmation)</label>
-      <input type="password" id="pwd-current" class="login-field" placeholder="Votre mot de passe admin" style="margin-bottom:0">
+      <div class="pwd-wrap"><input type="password" id="pwd-current" class="login-field" placeholder="Votre mot de passe admin"><button type="button" class="pwd-toggle" onclick="togglePwd('pwd-current',this)">👁</button></div>
     </div>
     <div style="margin-bottom:12px">
       <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:5px">Nouveau mot de passe</label>
-      <input type="password" id="pwd-new" class="login-field" placeholder="Nouveau mot de passe (min. 4 car.)" style="margin-bottom:0">
+      <div class="pwd-wrap"><input type="password" id="pwd-new" class="login-field" placeholder="Nouveau mot de passe (min. 4 car.)"><button type="button" class="pwd-toggle" onclick="togglePwd('pwd-new',this)">👁</button></div>
     </div>
     <div style="margin-bottom:16px">
       <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:5px">Confirmer le nouveau mot de passe</label>
-      <input type="password" id="pwd-confirm" class="login-field" placeholder="Confirmer le nouveau mot de passe" style="margin-bottom:0">
+      <div class="pwd-wrap"><input type="password" id="pwd-confirm" class="login-field" placeholder="Confirmer le nouveau mot de passe"><button type="button" class="pwd-toggle" onclick="togglePwd('pwd-confirm',this)">👁</button></div>
     </div>
     <div id="change-pwd-error" style="color:#e53935;font-size:12px;font-weight:600;margin-bottom:10px;display:none"></div>
     <div style="font-size:11px;color:#90a4ae;text-align:center;margin-bottom:4px">↓ Faites défiler pour voir le PIN de secours</div>
@@ -355,8 +362,8 @@ tr.hidden-row{display:none}
     <div style="background:#fff8e1;border-radius:8px;padding:10px;margin-bottom:12px;font-size:11px;color:#e65100">
       ⚠ Ce PIN sera utilisé si l'envoi d'email échoue. Gardez-le secret.
     </div>
-    <input type="password" id="new-recovery-pin" class="login-field" placeholder="PIN de secours (4-8 chiffres)" maxlength="8" inputmode="numeric" style="margin-bottom:8px">
-    <input type="password" id="new-recovery-pin2" class="login-field" placeholder="Confirmer le PIN" maxlength="8" inputmode="numeric" style="margin-bottom:0">
+    <div class="pwd-wrap" style="margin-bottom:8px"><input type="password" id="new-recovery-pin" class="login-field" placeholder="PIN de secours (4-8 chiffres)" maxlength="8" inputmode="numeric"><button type="button" class="pwd-toggle" onclick="togglePwd('new-recovery-pin',this)">👁</button></div>
+    <div class="pwd-wrap"><input type="password" id="new-recovery-pin2" class="login-field" placeholder="Confirmer le PIN" maxlength="8" inputmode="numeric"><button type="button" class="pwd-toggle" onclick="togglePwd('new-recovery-pin2',this)">👁</button></div>
     <div id="pin-save-msg" style="font-size:11px;margin-top:6px;display:none"></div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModals()">Annuler</button>
@@ -373,8 +380,8 @@ tr.hidden-row{display:none}
     <div class="user-add-form">
       <div style="font-weight:700;font-size:13px;color:#1a237e;margin-bottom:10px">➕ Ajouter un utilisateur</div>
       <input type="text" id="new-username" placeholder="Nom d'utilisateur">
-      <input type="password" id="new-password" placeholder="Mot de passe">
-      <input type="password" id="new-password2" placeholder="Confirmer le mot de passe">
+      <div class="pwd-wrap" style="margin-bottom:10px"><input type="password" id="new-password" placeholder="Mot de passe" style="margin-bottom:0"><button type="button" class="pwd-toggle" onclick="togglePwd('new-password',this)">👁</button></div>
+      <div class="pwd-wrap" style="margin-bottom:10px"><input type="password" id="new-password2" placeholder="Confirmer le mot de passe" style="margin-bottom:0"><button type="button" class="pwd-toggle" onclick="togglePwd('new-password2',this)">👁</button></div>
       <select id="new-role">
         <option value="user">Utilisateur</option>
         <option value="admin">Administrateur</option>
@@ -2332,6 +2339,21 @@ async function deleteUser(username){
   await saveUsers(users);
   await renderUserList();
   showToast(`✓ Compte "${username}" supprimé`,'#c0392b');
+}
+
+// Afficher/masquer mot de passe
+function togglePwd(fieldId, btn){
+  const el = document.getElementById(fieldId);
+  if(!el) return;
+  if(el.type === 'password'){
+    el.type = 'text';
+    btn.textContent = '🙈';
+    btn.title = 'Masquer';
+  } else {
+    el.type = 'password';
+    btn.textContent = '👁';
+    btn.title = 'Afficher';
+  }
 }
 
 // Permettre Enter pour la connexion
