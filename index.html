@@ -148,7 +148,7 @@ tr.hidden-row{display:none}
 /* MODALS */
 .modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center}
 .modal-overlay.open{display:flex}
-.modal-box{background:#fff;border:1px solid var(--border);border-radius:14px;padding:26px;width:460px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.18);max-height:90vh;overflow-y:auto}
+.modal-box{background:#fff;border:1px solid var(--border);border-radius:14px;padding:20px;width:460px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.18);max-height:92vh;overflow-y:auto}
 .modal-box h3{font-size:16px;font-weight:800;margin-bottom:4px;color:#1a1a2e}
 .modal-box p.sub{font-size:12px;color:#888;margin-bottom:16px}
 .modal-box label{font-size:12px;color:#555;display:block;margin-bottom:4px;margin-top:12px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
@@ -216,6 +216,7 @@ tr.hidden-row{display:none}
 .code-timer{font-size:11px;color:#90a4ae;text-align:center;margin-bottom:8px}
 /* ── PANEL ADMIN ── */
 #admin-modal .modal-box{max-width:520px;max-height:85vh;overflow-y:auto}
+#change-pwd-modal .modal-box{max-height:92vh;overflow-y:auto}
 .user-list-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:8px;background:#f4f6fa;margin-bottom:8px;gap:10px}
 .user-list-item .user-info{flex:1}
 .user-list-item .user-name{font-weight:700;font-size:13px;color:#1a237e}
@@ -348,7 +349,8 @@ tr.hidden-row{display:none}
       <input type="password" id="pwd-confirm" class="login-field" placeholder="Confirmer le nouveau mot de passe" style="margin-bottom:0">
     </div>
     <div id="change-pwd-error" style="color:#e53935;font-size:12px;font-weight:600;margin-bottom:10px;display:none"></div>
-    <hr style="border:none;border-top:1px solid #e0e0e0;margin:16px 0">
+    <div style="font-size:11px;color:#90a4ae;text-align:center;margin-bottom:4px">↓ Faites défiler pour voir le PIN de secours</div>
+    <hr style="border:none;border-top:1px solid #e0e0e0;margin:10px 0">
     <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:8px">🔐 Code PIN de secours (facultatif)</div>
     <div style="background:#fff8e1;border-radius:8px;padding:10px;margin-bottom:12px;font-size:11px;color:#e65100">
       ⚠ Ce PIN sera utilisé si l'envoi d'email échoue. Gardez-le secret.
