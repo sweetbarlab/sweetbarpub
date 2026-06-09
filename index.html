@@ -758,7 +758,7 @@ function renderSections(saved){
         <td style="background:${rowBg}"><input class="qty-input${(sv.veille||0)===0?' zero-val':''}" type="number" min="0" id="${pid}_v" value="${sv.veille||0}" style="background:${rowBg}" onfocus="clearIfZero(this)" onblur="restoreIfEmpty(this,'${pid}')" onchange="recalcRow('${pid}')"></td>
         <td style="background:${rowBg}"><input class="qty-input${(sv.charge||0)===0?' zero-val':''}" type="number" min="0" id="${pid}_c" value="${sv.charge||0}" style="background:${rowBg}" onfocus="clearIfZero(this)" onblur="restoreIfEmpty(this,'${pid}')" onchange="recalcRow('${pid}')"></td>
         <td class="total-cell" id="${pid}_t" style="background:${rowBg}">${tot}</td>
-        <td style="background:${rowBg}"><input class="qty-input${(sv.vendue||0)===0?' zero-val':''}" type="number" min="0" id="${pid}_s" value="${sv.vendue||0}" style="background:${rowBg};color:#000;font-weight:900" onfocus="clearIfZero(this)" onblur="restoreIfEmpty(this,'${pid}')" oninput="calcResteFromVendue('${pid}')"></td>
+        <td style="background:${rowBg}"><input class="qty-input${(sv.vendue||0)===0?' zero-val':''}" type="number" min="0" id="${pid}_s" value="${sv.vendue||0}" style="background:${rowBg};color:#000;font-weight:900;${tot===0?'opacity:.35;cursor:not-allowed;pointer-events:none':''}" ${tot===0?'disabled':''} onfocus="clearIfZero(this)" onblur="restoreIfEmpty(this,'${pid}')" oninput="calcResteFromVendue('${pid}')"></td>
         <td class="${rc}" id="${pid}_r" style="font-weight:800;font-size:12px">${Math.max(0,tot-(+sv.vendue||0))}</td>
         <td><div class="action-cell">
           <button class="btn-edit" onclick="openEditModal('${bar}','${sec.key}','${prod.replace(/'/g,"\\'")}','${pid}',${sec.isWhisky})">✏️</button>
@@ -828,8 +828,18 @@ function calcResteFromVendue(pid){
   const tot    = +tEl.textContent||0;
   const vendue = +sEl.value||0;
 
+  // Bloquer si Total = 0 (pas de stock)
+  if(tot === 0){
+    sEl.value = 0;
+    sEl.disabled = true;
+    sEl.style.opacity = '.35';
+    sEl.style.cursor = 'not-allowed';
+    rEl.textContent = 0;
+    return;
+  }
+
   // Validation : Produits Vendue ne peut pas dépasser le Total Produits
-  if(tot > 0 && vendue > tot){
+  if(vendue > tot){
     sEl.classList.add('error-val');
     showVendueError(vendue, tot);
     return; // Ne pas recalculer si invalide
@@ -890,6 +900,23 @@ function recalcRow(pid){
   const tot = v+c;
 
   if(tEl) tEl.textContent = tot;
+
+  // Activer/désactiver le champ Produits Vendue selon le Total
+  if(sEl){
+    if(tot === 0){
+      sEl.disabled = true;
+      sEl.value = 0;
+      sEl.style.opacity = '.35';
+      sEl.style.cursor = 'not-allowed';
+      sEl.style.pointerEvents = 'none';
+      sEl.classList.add('zero-val');
+    } else {
+      sEl.disabled = false;
+      sEl.style.opacity = '';
+      sEl.style.cursor = '';
+      sEl.style.pointerEvents = '';
+    }
+  }
 
   // Restante = Total - Produits Vendue (calculé automatiquement)
   const vendue = +sEl?.value||0;
