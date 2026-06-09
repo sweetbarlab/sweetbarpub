@@ -382,10 +382,14 @@ tr.hidden-row{display:none}
       <input type="text" id="new-username" placeholder="Nom d'utilisateur">
       <div class="pwd-wrap" style="margin-bottom:10px"><input type="password" id="new-password" placeholder="Mot de passe" style="margin-bottom:0"><button type="button" class="pwd-toggle" onclick="togglePwd('new-password',this)">👁</button></div>
       <div class="pwd-wrap" style="margin-bottom:10px"><input type="password" id="new-password2" placeholder="Confirmer le mot de passe" style="margin-bottom:0"><button type="button" class="pwd-toggle" onclick="togglePwd('new-password2',this)">👁</button></div>
-      <select id="new-role">
+      <select id="new-role" onchange="toggleBarSelector()">
         <option value="user">Utilisateur</option>
         <option value="admin">Administrateur</option>
       </select>
+      <div id="bar-selector-wrap" style="margin-top:4px">
+        <label style="font-size:11px;color:#555;font-weight:700;display:block;margin-bottom:4px">Bar attribué</label>
+        <select id="new-bar-access" style="width:100%;padding:9px 12px;border:1.5px solid #c5cae9;border-radius:8px;font-size:13px;margin-bottom:10px;box-sizing:border-box;outline:none"></select>
+      </div>
       <button class="btn-confirm" onclick="addUser()" style="width:100%;margin-top:4px">✓ Créer le compte</button>
     </div>
     <div class="modal-actions">
@@ -731,6 +735,8 @@ function renderTabs(){
 }
 
 function switchBar(bar){
+  // Bloquer si l'utilisateur est restreint à un seul bar
+  if(window._barRestricted && bar !== window._barRestricted) return;
   currentBar=bar;
   activeFilter=null;
   document.getElementById('filter-banner').style.display='none';
@@ -1513,6 +1519,8 @@ async function confirmNewBar(){
   try{await dbSaveConfig(BARS);}catch(e){showToast('⚠ Erreur sauvegarde config','#c0392b');}
   closeModals(); renderTabs(); switchBar(key);
   showToast(`✓ Bar "${name}" créé !`);
+  // Mettre à jour le sélecteur de bars dans la modal admin si elle est ré-ouverte
+  populateBarSelector();
 }
 
 // ── SUPPRIMER BAR ─────────────────────────────────────────────────────────────
@@ -1530,6 +1538,7 @@ async function confirmDeleteBar(){
   closeModals();barToDelete=null;
   const first=Object.keys(BARS)[0];
   renderTabs();switchBar(first);
+  populateBarSelector(); // Mettre à jour le sélecteur
   showToast(`✓ Bar "${name}" supprimé`,'#c0392b');
 }
 
@@ -2126,7 +2135,7 @@ async function doLogin(){
     if(hash !== user.hash){ throw new Error('Mot de passe incorrect'); }
 
     // Connexion réussie
-    currentUser = { username: user.username, role: user.role };
+    currentUser = { username: user.username, role: user.role, barAccess: user.barAccess || null };
     sessionStorage.setItem('sb_user', JSON.stringify(currentUser));
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('current-user-badge').textContent = `👤 ${user.username}`;
@@ -2140,6 +2149,11 @@ async function doLogin(){
 
     await initApp();
 
+    // Restreindre l'accès au bar attribué pour les non-admins
+    if(user.role !== 'admin' && user.barAccess){
+      applyBarRestriction(user.barAccess);
+    }
+
   }catch(e){
     errEl.textContent = '❌ ' + e.message;
     errEl.style.display = 'block';
@@ -2149,6 +2163,23 @@ async function doLogin(){
 }
 
 // Appliquer les restrictions selon le rôle
+function applyBarRestriction(barKey){
+  // Cacher les onglets des autres bars
+  document.querySelectorAll('.nav-tab').forEach(tab=>{
+    const onclick = tab.getAttribute('onclick') || '';
+    const match = onclick.match(/switchBar\('([^']+)'\)/);
+    if(match && match[1] !== barKey){
+      tab.style.display = 'none';
+    }
+  });
+  // Forcer le bar attribué
+  if(BARS[barKey]){
+    switchBar(barKey);
+  }
+  // Empêcher le changement de bar via switchBar
+  window._barRestricted = barKey;
+}
+
 function applyRoleRestrictions(role){
   const adminOnlyBtns = ['openFixModal','resetDefaultProducts','openNewBarModal','openChangePwdModal'];
   if(role !== 'admin'){
@@ -2279,6 +2310,9 @@ async function openAdminModal(){
   document.getElementById('new-username').value = '';
   document.getElementById('new-password').value = '';
   document.getElementById('new-password2').value = '';
+  document.getElementById('new-role').value = 'user';
+  populateBarSelector();
+  toggleBarSelector();
   document.getElementById('admin-modal').classList.add('open');
 }
 
@@ -2294,17 +2328,32 @@ async function renderUserList(){
   container.innerHTML = entries.map(u => {
     const isAdmin = u.username === 'admin';
     const roleLabel = u.role === 'admin' ? '⭐ Administrateur' : '👥 Utilisateur';
+    const barLabel = u.role === 'admin' ? 'Tous les bars' : (BARS[u.barAccess]?.name || u.barAccess || '—');
     const actionBtn = isAdmin
       ? '<span style="font-size:11px;color:#bbb">Compte principal</span>'
       : `<button class="btn-del-user" data-user="${u.username}" onclick="deleteUser(this.dataset.user)">✕ Supprimer</button>`;
     return `<div class="user-list-item">
       <div class="user-info">
         <div class="user-name">👤 ${u.username}</div>
-        <div class="user-role">${roleLabel}</div>
+        <div class="user-role">${roleLabel} — 🏠 ${barLabel}</div>
       </div>
       ${actionBtn}
     </div>`;
   }).join('');
+}
+
+function toggleBarSelector(){
+  const role = document.getElementById('new-role').value;
+  const wrap = document.getElementById('bar-selector-wrap');
+  if(wrap) wrap.style.display = role === 'admin' ? 'none' : 'block';
+}
+
+function populateBarSelector(){
+  const sel = document.getElementById('new-bar-access');
+  if(!sel) return;
+  sel.innerHTML = Object.entries(BARS).map(([key,b])=>
+    `<option value="${key}">${b.name}</option>`
+  ).join('');
 }
 
 async function addUser(){
@@ -2312,6 +2361,7 @@ async function addUser(){
   const password = document.getElementById('new-password').value;
   const password2 = document.getElementById('new-password2').value;
   const role = document.getElementById('new-role').value;
+  const barAccess = role === 'admin' ? null : (document.getElementById('new-bar-access')?.value || Object.keys(BARS)[0]);
 
   if(!username || !password){ showToast("⚠ Remplissez tous les champs","#e65100"); return; }
   if(password !== password2){ showToast("⚠ Les mots de passe ne correspondent pas","#e65100"); return; }
@@ -2322,7 +2372,7 @@ async function addUser(){
   if(users[username]){ showToast("⚠ Ce nom existe déjà","#e65100"); return; }
 
   const hash = await hashPassword(password);
-  users[username] = { username, role, hash };
+  users[username] = { username, role, hash, barAccess };
   await saveUsers(users);
   await renderUserList();
   document.getElementById('new-username').value = '';
@@ -2374,6 +2424,9 @@ document.addEventListener('keydown', e=>{
     if(adminBtn) adminBtn.style.display = currentUser.role === 'admin' ? '' : 'none';
     applyRoleRestrictions(currentUser.role);
     await initApp();
+    if(currentUser.role !== 'admin' && currentUser.barAccess){
+      applyBarRestriction(currentUser.barAccess);
+    }
   } else {
     // Afficher écran de connexion
     document.getElementById('login-screen').style.display = 'flex';
