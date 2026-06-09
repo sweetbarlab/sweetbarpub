@@ -102,6 +102,7 @@ body{font-family:Arial,sans-serif;background:#f4f6fa;color:#1a1a2e;min-height:10
 tr.hidden-row{display:none}
 .qty-input{width:52px;background:#f4f6fa;color:#1a237e;border:1px solid #c5cae9;border-radius:4px;padding:3px 2px;font-size:11px;text-align:center;outline:none;font-weight:700}
 .qty-input:focus{border-color:#3949ab;background:#fff!important}
+.qty-input.vendue-disabled{opacity:.4;cursor:not-allowed;pointer-events:none;background:#e8e8e8!important;color:#999!important;-webkit-user-select:none;user-select:none}
 .total-cell{font-size:12px}
 .vendue-cell{font-size:12px}
 /* Responsive mobile */
@@ -758,7 +759,7 @@ function renderSections(saved){
         <td style="background:${rowBg}"><input class="qty-input${(sv.veille||0)===0?' zero-val':''}" type="number" min="0" id="${pid}_v" value="${sv.veille||0}" style="background:${rowBg}" onfocus="clearIfZero(this)" onblur="restoreIfEmpty(this,'${pid}')" onchange="recalcRow('${pid}')"></td>
         <td style="background:${rowBg}"><input class="qty-input${(sv.charge||0)===0?' zero-val':''}" type="number" min="0" id="${pid}_c" value="${sv.charge||0}" style="background:${rowBg}" onfocus="clearIfZero(this)" onblur="restoreIfEmpty(this,'${pid}')" onchange="recalcRow('${pid}')"></td>
         <td class="total-cell" id="${pid}_t" style="background:${rowBg}">${tot}</td>
-        <td style="background:${rowBg}"><input class="qty-input${(sv.vendue||0)===0?' zero-val':''}" type="number" min="0" id="${pid}_s" value="${sv.vendue||0}" style="background:${rowBg};color:#000;font-weight:900;${tot===0?'opacity:.35;cursor:not-allowed;pointer-events:none':''}" ${tot===0?'disabled':''} onfocus="clearIfZero(this)" onblur="restoreIfEmpty(this,'${pid}')" oninput="calcResteFromVendue('${pid}')"></td>
+        <td style="background:${rowBg}"><input class="qty-input${(sv.vendue||0)===0?' zero-val':''}${tot===0?' vendue-disabled':''}" type="number" min="0" id="${pid}_s" value="${sv.vendue||0}" ${tot===0?'disabled tabindex="-1" readonly':''} style="background:${tot===0?'#e8e8e8':rowBg};color:${tot===0?'#999':'#000'};font-weight:900" onfocus="${tot===0?'this.blur();return false;':''};clearIfZero(this)" onblur="restoreIfEmpty(this,'${pid}')" oninput="calcResteFromVendue('${pid}')"></td>
         <td class="${rc}" id="${pid}_r" style="font-weight:800;font-size:12px">${Math.max(0,tot-(+sv.vendue||0))}</td>
         <td><div class="action-cell">
           <button class="btn-edit" onclick="openEditModal('${bar}','${sec.key}','${prod.replace(/'/g,"\\'")}','${pid}',${sec.isWhisky})">✏️</button>
@@ -832,8 +833,10 @@ function calcResteFromVendue(pid){
   if(tot === 0){
     sEl.value = 0;
     sEl.disabled = true;
-    sEl.style.opacity = '.35';
-    sEl.style.cursor = 'not-allowed';
+    sEl.readOnly = true;
+    sEl.classList.add('vendue-disabled','zero-val');
+    sEl.style.background = '#e8e8e8';
+    sEl.style.color = '#999';
     rEl.textContent = 0;
     return;
   }
@@ -905,16 +908,21 @@ function recalcRow(pid){
   if(sEl){
     if(tot === 0){
       sEl.disabled = true;
+      sEl.readOnly = true;
+      sEl.setAttribute('tabindex','-1');
       sEl.value = 0;
-      sEl.style.opacity = '.35';
-      sEl.style.cursor = 'not-allowed';
-      sEl.style.pointerEvents = 'none';
-      sEl.classList.add('zero-val');
+      sEl.classList.add('vendue-disabled','zero-val');
+      sEl.classList.remove('error-val');
+      sEl.style.background = '#e8e8e8';
+      sEl.style.color = '#999';
+      sEl.style.fontWeight = '900';
     } else {
       sEl.disabled = false;
-      sEl.style.opacity = '';
-      sEl.style.cursor = '';
-      sEl.style.pointerEvents = '';
+      sEl.readOnly = false;
+      sEl.removeAttribute('tabindex');
+      sEl.classList.remove('vendue-disabled');
+      sEl.style.background = '';
+      sEl.style.color = '#000';
     }
   }
 
