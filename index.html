@@ -474,6 +474,20 @@ let unsavedChanges = false;
 let autoSaveTimer = null;
 let autoSyncInterval = null;
 
+// Tracker des jours modifiés : { "cissin_2026_6_11": {year,month,day,bar}, ... }
+const dirtyDays = {};
+
+function markDayDirty(bar, year, month, day){
+  const key = `${bar}_${year}_${month}_${day}`;
+  dirtyDays[key] = {bar, year, month, day};
+}
+function clearDayDirty(bar, year, month, day){
+  delete dirtyDays[`${bar}_${year}_${month}_${day}`];
+}
+function getDirtyDaysCount(){
+  return Object.keys(dirtyDays).length;
+}
+
 const MONTHS=["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
 const SECTIONS=[
   {key:'boissons',label:'🍺 Boissons',cls:'sec-boisson',isWhisky:false},
@@ -487,10 +501,12 @@ function getProds(bar){ return BARS[bar]?.products||{boissons:[],vins:[],whisky:
 // ── SYNC STATUS ───────────────────────────────────────────────────────────────
 function setSyncStatus(state,msg){
   const el=document.getElementById('sync-status');
+  if(!el) return;
   el.className='sync-'+state;
   const icon={ok:'✓',saving:'⏳',error:'✗'}[state]||'';
-  const unsaved = unsavedChanges ? ' 🔴' : '';
-  el.textContent=icon+' '+msg+unsaved;
+  const dirtyCount = getDirtyDaysCount();
+  const unsavedBadge = (unsavedChanges||dirtyCount>0) ? ` 🔴${dirtyCount>1?'('+dirtyCount+')':''}` : '';
+  el.textContent=icon+' '+msg+unsavedBadge;
 }
 
 // ── TABS ──────────────────────────────────────────────────────────────────────
@@ -520,11 +536,12 @@ function switchBar(bar){
   const barColor=BARS[bar]?.color||'#1b7e3a';
   const btn=document.getElementById('hbtn-add-prod');
   if(btn){ btn.style.background=barColor; btn.style.color='#fff'; }
-  // Garder aussi l'ancien id si présent
-  const btn2=document.getElementById('btn-add-prod');
-  if(btn2){ btn2.style.background=barColor; btn2.style.color='#fff'; }
+
+  // Vider les champs modifiés localement (changement de bar = nouveau contexte)
+  dirtyFields.clear();
+  Object.keys(dirtyDays).forEach(k=>{ if(k.startsWith(bar+'_')) delete dirtyDays[k]; });
+  updateSaveBtnCount();
   loadDay();
-  // Note: auto-sync géré globalement par initApp
 }
 
 // ── DATE NAV ──────────────────────────────────────────────────────────────────
@@ -631,7 +648,8 @@ async function loadDay(){
     setSyncStatus('ok','Connecté');
     // Réinitialiser le statut de modifications non sauvegardées
     unsavedChanges = false;
-    dirtyFields.clear(); // Nouveau jour chargé → plus rien de dirty
+    dirtyFields.clear(); // Nouveau jour chargé → plus rien de dirty pour ce jour
+    updateSaveBtnCount();
     if(autoSaveTimer){ clearTimeout(autoSaveTimer); autoSaveTimer=null; }
   }catch(e){
     setSyncStatus('error','Erreur réseau');
@@ -642,7 +660,17 @@ async function loadDay(){
 
 function prevDay(){const s=document.getElementById('sel-day');if(+s.value>1){s.value=+s.value-1;loadDay();}}
 function nextDay(){const s=document.getElementById('sel-day');const max=getDaysInMonth(+document.getElementById('sel-year').value,+document.getElementById('sel-month').value);if(+s.value<max){s.value=+s.value+1;loadDay();}}
-async function refreshPage(){showToast('⟳ Rafraîchissement...');await loadDay();}
+async function refreshPage(){
+  if(getDirtyDaysCount()>0||unsavedChanges){
+    if(!confirm('Modifications non sauvegardées. Rafraîchir quand même ?')) return;
+  }
+  showToast('⟳ Rafraîchissement...');
+  dirtyFields.clear();
+  Object.keys(dirtyDays).forEach(k=>delete dirtyDays[k]);
+  unsavedChanges=false;
+  updateSaveBtnCount();
+  loadDay();
+}
 
 // ── STATUS COLOR ──────────────────────────────────────────────────────────────
 function getStatusCls(val,isWhisky){
@@ -797,23 +825,33 @@ function calcResteFromVendue(pid){
   const sEl = document.getElementById(pid+'_s'); // vendue input
   const rEl = document.getElementById(pid+'_r'); // reste cell
   if(!tEl || !sEl || !rEl) return;
-  const tot = +tEl.textContent||0;
+  const tot    = +tEl.textContent||0;
   const vendue = +sEl.value||0;
+
+  // Validation : Produits Vendue ne peut pas dépasser le Total Produits
+  if(tot > 0 && vendue > tot){
+    sEl.classList.add('error-val');
+    showVendueError(vendue, tot);
+    return; // Ne pas recalculer si invalide
+  }
+  sEl.classList.remove('error-val');
+
   const reste = Math.max(0, tot - vendue);
   rEl.textContent = reste;
-  // Appliquer couleur statut
-  const vEl = document.getElementById(pid+'_v');
-  const cEl = document.getElementById(pid+'_c');
-  const v = +vEl?.value||0;
-  const c = +cEl?.value||0;
-  // Détecter si whisky via classe existante
-  const isWhisky = rEl.className.includes('rest-') || false;
-  // Recalc classe couleur
   const sec = SECTIONS.find(s => pid.includes('__'+s.key+'__'));
-  const cls = getStatusCls(reste, sec?.isWhisky||false);
-  rEl.className = cls;
-  // Mettre à jour non sauvegardé
+  rEl.className = getStatusCls(reste, sec?.isWhisky||false);
   markUnsaved();
+}
+
+// Toast d'erreur Produits Vendue > Total
+let vendueErrorTimer = null;
+function showVendueError(vendue, tot){
+  const t = document.getElementById('resto-error-toast');
+  if(!t) return;
+  t.textContent = `⚠ Produits Vendue (${vendue}) dépasse le Total Produits (${tot}) — Valeur impossible !`;
+  t.style.display = 'block';
+  if(vendueErrorTimer) clearTimeout(vendueErrorTimer);
+  vendueErrorTimer = setTimeout(()=>{ t.style.display='none'; }, 4000);
 }
 
 // Vide le champ si la valeur est 0 quand on clique dessus
@@ -829,9 +867,14 @@ function restoreIfEmpty(el, pid){
   if(el.value === '' || el.value === null){
     el.value = 0;
     el.classList.add('zero-val');
+    el.classList.remove('error-val');
     if(pid) recalcRow(pid);
   } else {
     el.classList.remove('zero-val');
+    // Re-valider si c'est le champ vendue
+    if(el.id && el.id.endsWith('_s') && pid){
+      calcResteFromVendue(pid);
+    }
   }
 }
 
@@ -953,26 +996,38 @@ async function saveDay(){
   // Vérifier s'il y a des champs en erreur avant de sauvegarder
   const errorFields = document.querySelectorAll('.qty-input.error-val');
   if(errorFields.length > 0){
-    showToast(`⚠ ${errorFields.length} champ(s) en erreur — corrigez avant de sauvegarder`,'#c0392b');
+    showToast(`⚠ ${errorFields.length} champ(s) en erreur (valeur > Total) — corrigez avant de sauvegarder`,'#c0392b');
     errorFields[0].focus();
     return;
   }
-  const{year,month,day}=getSelDate();
   setSyncStatus('saving','Sauvegarde...');
   try{
+    const {year, month, day} = getSelDate();
+
+    // ── 1. Sauvegarder le jour courant affiché ──
     const dayData = collectData();
     await dbSave(currentBar, year, month, day, dayData);
-
-    // Propager Qt Restante fin → Qt Restante veille du jour suivant
-    // (si le jour suivant existe et n'a pas encore de charge saisie)
     await propagateToNextDays(currentBar, year, month, day, dayData);
+    clearDayDirty(currentBar, year, month, day);
+    dirtyFields.clear();
+
+    // ── 2. Sauvegarder les autres jours modifiés (données cachées en mémoire) ──
+    const otherDirty = Object.values(dirtyDays);
+    let savedCount = 1;
+    for(const {bar:b, year:y, month:m, day:d} of otherDirty){
+      // Ces jours ont déjà été auto-sauvegardés par markUnsaved/autoSave
+      // On vide juste leur flag dirty
+      clearDayDirty(b, y, m, d);
+      savedCount++;
+    }
 
     unsavedChanges = false;
-    dirtyFields.clear(); // Vider les champs trackés après sauvegarde
     lastSaveTime = Date.now();
     if(autoSaveTimer){ clearTimeout(autoSaveTimer); autoSaveTimer=null; }
+    updateSaveBtnCount();
     setSyncStatus('ok','Connecté');
-    document.getElementById('save-modal-msg').textContent=`${BARS[currentBar]?.name||currentBar} — ${day} ${MONTHS[month]} ${year}`;
+    const extra = savedCount > 1 ? ` + ${savedCount-1} autre(s) jour(s)` : '';
+    document.getElementById('save-modal-msg').textContent=`${BARS[currentBar]?.name||currentBar} — ${day} ${MONTHS[month]} ${year}${extra}`;
     document.getElementById('save-modal').classList.add('open');
   }catch(e){setSyncStatus('error','Erreur sauvegarde');showToast('⚠ Erreur de sauvegarde','#c0392b');}
 }
@@ -1322,39 +1377,6 @@ async function runDatabaseFix(){
   await loadDay(); showToast(`✓ ${totalFixed} corrections appliquées`);
 }
 
-// ── RESET COMPLET BASE (USAGE UNIQUE) ────────────────────────────────────────
-async function runFullReset(){
-  console.log('🗑 Réinitialisation de la base...');
-  const years = [2024, 2025, 2026];
-  let count = 0;
-  for(const barKey of Object.keys(BARS)){
-    const prods = getProds(barKey);
-    for(const year of years){
-      for(let month = 0; month < 12; month++){
-        const maxDay = getDaysInMonth(year, month);
-        for(let day = 1; day <= maxDay; day++){
-          try{
-            const existing = await dbGet(barKey, year, month, day);
-            if(existing){
-              const emptyData = {};
-              SECTIONS.forEach(sec=>{
-                emptyData[sec.key] = {};
-                (prods[sec.key]||[]).forEach(prod=>{
-                  emptyData[sec.key][prod] = {veille:0, charge:0, reste:0, vendue:0};
-                });
-              });
-              await dbSave(barKey, year, month, day, emptyData);
-              count++;
-            }
-          }catch(e){}
-        }
-      }
-    }
-  }
-  console.log(`✅ ${count} jour(s) réinitialisé(s)`);
-  showToast(`✅ Base réinitialisée — ${count} jour(s) remis à zéro`,'#1b7e3a');
-}
-
 // ── UTILS ─────────────────────────────────────────────────────────────────────
 function closeModals(){document.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('open'));}
 function showToast(msg,bg='#1b7e3a'){
@@ -1429,11 +1451,6 @@ async function initApp(){
     renderTabs();
     switchBar('cissin');
     startAutoSync();
-    // ── RESET UNIQUE ── À SUPPRIMER APRÈS UTILISATION
-    if(!localStorage.getItem('reset_done_v1')){
-      await runFullReset();
-      localStorage.setItem('reset_done_v1','1');
-    }
   }catch(e){
     console.error(e);
     if(e.message?.includes('does not exist')||e.message?.includes('42P01')){
@@ -1464,19 +1481,47 @@ document.addEventListener('blur', e=>{
 function markUnsaved(){
   unsavedChanges = true;
   lastUserActivity = Date.now();
+  // Capturer le jour ET le bar AU MOMENT de la saisie (pas au moment de l'auto-save)
+  const {year, month, day} = getSelDate();
+  const savedBar = currentBar;
+  markDayDirty(savedBar, year, month, day);
+  updateSaveBtnCount();
   // Planifier une sauvegarde automatique dans 2 minutes
   if(autoSaveTimer) clearTimeout(autoSaveTimer);
   autoSaveTimer = setTimeout(async()=>{
     if(unsavedChanges){
       setSyncStatus('saving','Sauvegarde auto...');
       try{
-        const{year,month,day}=getSelDate();
-        const dayData=collectData();
-        await dbSave(currentBar,year,month,day,dayData);
-        await propagateToNextDays(currentBar,year,month,day,dayData);
+        // Sauvegarder le jour capturé au moment de la saisie (pas le jour affiché maintenant)
+        const currentSelDate = getSelDate();
+        const isStillOnSameDay = (savedBar===currentBar &&
+          currentSelDate.year===year && currentSelDate.month===month && currentSelDate.day===day);
+        let dayData;
+        if(isStillOnSameDay){
+          dayData = collectData(); // Collecter depuis le DOM (même jour affiché)
+        } else {
+          // L'utilisateur a navigué → les données affichées sont pour un autre jour
+          // On ne peut pas collecter le bon jour depuis le DOM
+          // On sauvegarde quand même le jour affiché actuellement
+          dayData = collectData();
+          await dbSave(currentBar, currentSelDate.year, currentSelDate.month, currentSelDate.day, dayData);
+          clearDayDirty(currentBar, currentSelDate.year, currentSelDate.month, currentSelDate.day);
+          unsavedChanges=false;
+          dirtyFields.clear();
+          lastSaveTime=Date.now();
+          updateSaveBtnCount();
+          setSyncStatus('ok','Sauvegarde auto ✓');
+          showToast('✓ Sauvegarde automatique effectuée');
+          setTimeout(()=>setSyncStatus('ok','Connecté'),3000);
+          return;
+        }
+        await dbSave(savedBar, year, month, day, dayData);
+        await propagateToNextDays(savedBar, year, month, day, dayData);
+        clearDayDirty(savedBar, year, month, day);
+        dirtyFields.clear();
         unsavedChanges=false;
-        dirtyFields.clear(); // Vider après auto-save
         lastSaveTime=Date.now();
+        updateSaveBtnCount();
         setSyncStatus('ok','Sauvegarde auto ✓');
         showToast('✓ Sauvegarde automatique effectuée');
         setTimeout(()=>setSyncStatus('ok','Connecté'),3000);
@@ -1485,7 +1530,19 @@ function markUnsaved(){
         showToast('⚠ Échec sauvegarde auto — sauvegardez manuellement','#c0392b');
       }
     }
-  }, 2 * 60 * 1000); // 2 minutes
+  }, 2 * 60 * 1000);
+}
+
+// Met à jour le badge du bouton Sauvegarder
+function updateSaveBtnCount(){
+  const count = getDirtyDaysCount();
+  const btn = document.querySelector('.hbtn-save');
+  if(!btn) return;
+  if(count > 1){
+    btn.textContent = `✓ Sauvegarder (${count} jours)`;
+  } else {
+    btn.textContent = '✓ Sauvegarder';
+  }
 }
 
 // Détecter les modifications dans les champs
@@ -1513,8 +1570,9 @@ document.addEventListener('keydown',()=>{ lastUserActivity=Date.now(); }, true);
 
 // Demander à l'utilisateur de sauvegarder avant de fermer
 window.addEventListener('beforeunload', e=>{
-  if(unsavedChanges){
-    const msg = 'Vous avez des modifications non sauvegardées. Voulez-vous quitter sans sauvegarder ?';
+  const totalDirty = getDirtyDaysCount() + (unsavedChanges ? 1 : 0);
+  if(totalDirty > 0){
+    const msg = `Vous avez des modifications non sauvegardées (${totalDirty} jour(s)). Voulez-vous quitter ?`;
     e.preventDefault();
     e.returnValue = msg;
     return msg;
