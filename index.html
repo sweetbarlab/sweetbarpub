@@ -631,6 +631,7 @@ async function loadDay(){
     setSyncStatus('ok','Connecté');
     // Réinitialiser le statut de modifications non sauvegardées
     unsavedChanges = false;
+    dirtyFields.clear(); // Nouveau jour chargé → plus rien de dirty
     if(autoSaveTimer){ clearTimeout(autoSaveTimer); autoSaveTimer=null; }
   }catch(e){
     setSyncStatus('error','Erreur réseau');
@@ -967,6 +968,7 @@ async function saveDay(){
     await propagateToNextDays(currentBar, year, month, day, dayData);
 
     unsavedChanges = false;
+    dirtyFields.clear(); // Vider les champs trackés après sauvegarde
     lastSaveTime = Date.now();
     if(autoSaveTimer){ clearTimeout(autoSaveTimer); autoSaveTimer=null; }
     setSyncStatus('ok','Connecté');
@@ -1320,6 +1322,39 @@ async function runDatabaseFix(){
   await loadDay(); showToast(`✓ ${totalFixed} corrections appliquées`);
 }
 
+// ── RESET COMPLET BASE (USAGE UNIQUE) ────────────────────────────────────────
+async function runFullReset(){
+  console.log('🗑 Réinitialisation de la base...');
+  const years = [2024, 2025, 2026];
+  let count = 0;
+  for(const barKey of Object.keys(BARS)){
+    const prods = getProds(barKey);
+    for(const year of years){
+      for(let month = 0; month < 12; month++){
+        const maxDay = getDaysInMonth(year, month);
+        for(let day = 1; day <= maxDay; day++){
+          try{
+            const existing = await dbGet(barKey, year, month, day);
+            if(existing){
+              const emptyData = {};
+              SECTIONS.forEach(sec=>{
+                emptyData[sec.key] = {};
+                (prods[sec.key]||[]).forEach(prod=>{
+                  emptyData[sec.key][prod] = {veille:0, charge:0, reste:0, vendue:0};
+                });
+              });
+              await dbSave(barKey, year, month, day, emptyData);
+              count++;
+            }
+          }catch(e){}
+        }
+      }
+    }
+  }
+  console.log(`✅ ${count} jour(s) réinitialisé(s)`);
+  showToast(`✅ Base réinitialisée — ${count} jour(s) remis à zéro`,'#1b7e3a');
+}
+
 // ── UTILS ─────────────────────────────────────────────────────────────────────
 function closeModals(){document.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('open'));}
 function showToast(msg,bg='#1b7e3a'){
@@ -1394,6 +1429,11 @@ async function initApp(){
     renderTabs();
     switchBar('cissin');
     startAutoSync();
+    // ── RESET UNIQUE ── À SUPPRIMER APRÈS UTILISATION
+    if(!localStorage.getItem('reset_done_v1')){
+      await runFullReset();
+      localStorage.setItem('reset_done_v1','1');
+    }
   }catch(e){
     console.error(e);
     if(e.message?.includes('does not exist')||e.message?.includes('42P01')){
@@ -1435,6 +1475,7 @@ function markUnsaved(){
         await dbSave(currentBar,year,month,day,dayData);
         await propagateToNextDays(currentBar,year,month,day,dayData);
         unsavedChanges=false;
+        dirtyFields.clear(); // Vider après auto-save
         lastSaveTime=Date.now();
         setSyncStatus('ok','Sauvegarde auto ✓');
         showToast('✓ Sauvegarde automatique effectuée');
@@ -1448,8 +1489,25 @@ function markUnsaved(){
 }
 
 // Détecter les modifications dans les champs
-document.addEventListener('input',  e=>{ if(e.target.classList?.contains('qty-input')) markUnsaved(); lastUserActivity=Date.now(); }, true);
-document.addEventListener('change', e=>{ if(e.target.classList?.contains('qty-input')) markUnsaved(); lastUserActivity=Date.now(); }, true);
+// Champs modifiés localement (non encore sauvegardés)
+const dirtyFields = new Set();
+
+document.addEventListener('input', e=>{
+  if(e.target.classList?.contains('qty-input')){
+    markUnsaved();
+    const pid = e.target.id.replace(/_[vcsr]$/, '');
+    if(pid) dirtyFields.add(pid);
+  }
+  lastUserActivity=Date.now();
+}, true);
+document.addEventListener('change', e=>{
+  if(e.target.classList?.contains('qty-input')){
+    markUnsaved();
+    const pid = e.target.id.replace(/_[vcsr]$/, '');
+    if(pid) dirtyFields.add(pid);
+  }
+  lastUserActivity=Date.now();
+}, true);
 document.addEventListener('focus',  ()=>{ lastUserActivity=Date.now(); }, true);
 document.addEventListener('keydown',()=>{ lastUserActivity=Date.now(); }, true);
 
@@ -1485,35 +1543,30 @@ function startAutoSync(){
         SECTIONS.forEach(sec=>{
           (prods[sec.key]||[]).forEach(prod=>{
             const pid = encodeId(currentBar, sec.key, prod);
+            // ⚡ Ne PAS écraser les lignes modifiées localement non sauvegardées
+            if(dirtyFields.has(pid)) return;
             const vEl = document.getElementById(pid+'_v');
             const cEl = document.getElementById(pid+'_c');
             const rEl = document.getElementById(pid+'_r');
             const sEl = document.getElementById(pid+'_s');
-            if(!vEl || !cEl || !rEl) return;
+            if(!vEl || !cEl) return;
             const fd = fresh[sec.key]?.[prod];
             if(!fd) return;
-            // Ne mettre à jour que si la valeur vient d'une autre machine
-            if(+vEl.value !== (+(fd.veille)||0)){ vEl.value=+(fd.veille)||0; updated=true; }
-            if(+cEl.value !== (+(fd.charge)||0)){ cEl.value=+(fd.charge)||0; updated=true; }
-            // rEl est un td (textContent), pas un input
-            const rVal = rEl.tagName==='INPUT' ? +rEl.value||0 : +rEl.textContent||0;
-            const fdReste=+(fd.reste||0);
-            if(rVal !== fdReste){
-              if(rEl.tagName==='INPUT') rEl.value=fdReste;
-              else rEl.textContent=fdReste;
-              updated=true;
-            }
-            // Mettre à jour vendue input (sEl)
-            const sEl2=document.getElementById(pid+'_s');
+            let rowUpdated = false;
+            if(+vEl.value !== (+(fd.veille)||0)){ vEl.value=+(fd.veille)||0; rowUpdated=true; }
+            if(+cEl.value !== (+(fd.charge)||0)){ cEl.value=+(fd.charge)||0; rowUpdated=true; }
             const fdVendue=+(fd.vendue||0);
-            if(sEl2 && +sEl2.value !== fdVendue){ sEl2.value=fdVendue; updated=true; }
-
-            if(updated){
-              recalcRow(pid);
-              const sec2=SECTIONS.find(s=>s.key===sec.key);
-              if(sec2) rEl.className='qty-input '+getStatusCls(+rEl.value||0,sec2.isWhisky);
-              if(sEl){ const cv=+cEl.value||0; const tot=+vEl.value+cv; const rv=+rEl.value; const vv=+vEl.value; sEl.textContent=cv===0?0:(rv!==vv?Math.max(0,tot-rv):0); }
+            if(sEl && +sEl.value !== fdVendue){ sEl.value=fdVendue; rowUpdated=true; }
+            const fdReste=+(fd.reste||0);
+            if(rEl){
+              const rVal = rEl.tagName==='INPUT' ? +rEl.value||0 : +rEl.textContent||0;
+              if(rVal !== fdReste){
+                if(rEl.tagName==='INPUT') rEl.value=fdReste;
+                else rEl.textContent=fdReste;
+                rowUpdated=true;
+              }
             }
+            if(rowUpdated){ recalcRow(pid); updated=true; }
           });
         });
         if(updated){ refreshSummary(); setSyncStatus('ok','Synchronisé ✓'); }
