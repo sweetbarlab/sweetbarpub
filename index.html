@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" type="text/javascript"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1896,25 +1896,39 @@ async function recoverStep1(){
   if(btn){ btn.textContent = '⏳ Envoi en cours...'; btn.disabled = true; }
 
   // Envoyer le code par email via EmailJS
+  let emailSent = false;
   try{
+    if(typeof emailjs === 'undefined'){
+      throw new Error('SDK EmailJS non chargé');
+    }
     emailjs.init(EMAILJS_PUBLIC_KEY);
-    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+    const result = await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
       to_name:       username,
       to_email:      ADMIN_RECOVERY_EMAIL,
       recovery_code: recoverCode,
       app_name:      'Sweet Bar Pub',
     });
+    console.log('EmailJS success:', result);
+    emailSent = true;
     showToast('✉ Code envoyé à ' + ADMIN_RECOVERY_EMAIL);
   }catch(e){
-    console.warn('EmailJS error:', e);
-    // Si l'envoi échoue, afficher le code à l'écran comme fallback
-    showToast("⚠ Email non reçu ? Utilisez le code affiché à l'écran", "#e65100");
+    console.error('EmailJS error:', e.text || e.message || e);
+    // Afficher l'erreur précise dans le toast
+    const errMsg = e.text || e.message || 'Erreur inconnue';
+    showToast('⚠ Email non envoyé (' + errMsg + ')', '#e65100');
   }finally{
     if(btn){ btn.textContent = 'Suivant →'; btn.disabled = false; }
   }
 
-  // Afficher le code (fallback visible)
+  // Afficher le code à l'écran (toujours visible comme sécurité)
   document.getElementById('recover-code-display').textContent = recoverCode;
+  // Si email envoyé : masquer le code après 3 secondes
+  if(emailSent){
+    setTimeout(()=>{
+      const el = document.getElementById('recover-code-display');
+      if(el) el.textContent = '(code envoyé par email)';
+    }, 3000);
+  }
 
   // Passer à l'étape 2
   document.getElementById('recover-step1').classList.remove('active');
@@ -2268,8 +2282,15 @@ document.addEventListener('keydown', e=>{
     setTimeout(()=>document.getElementById('login-username')?.focus(), 300);
   }
 })();
-// Initialiser EmailJS
-if(typeof emailjs !== 'undefined') emailjs.init(EMAILJS_PUBLIC_KEY);
+// Initialiser EmailJS dès que le DOM est prêt
+window.addEventListener('load', ()=>{
+  if(typeof emailjs !== 'undefined'){
+    emailjs.init(EMAILJS_PUBLIC_KEY);
+    console.log('EmailJS initialisé');
+  } else {
+    console.warn('EmailJS SDK non disponible');
+  }
+});
 registerPWA();
 </script>
 
