@@ -31,6 +31,10 @@ body{font-family:Arial,sans-serif;background:#f4f6fa;color:#1a1a2e;min-height:10
 .hbtn-refresh{background:#e040fb;color:#fff;box-shadow:0 2px 8px rgba(224,64,251,.4)}.hbtn-refresh:hover{background:#ea80fc;transform:translateY(-1px)}
 .hbtn-fix{background:#ff1744;color:#fff;box-shadow:0 2px 8px rgba(255,23,68,.4)}.hbtn-fix:hover{background:#ff5252;transform:translateY(-1px)}
 .hbtn-sync{background:#ffd600;color:#1a1a2e;box-shadow:0 2px 8px rgba(255,214,0,.4)}.hbtn-sync:hover{background:#ffea00;transform:translateY(-1px)}
+.hbtn-del-prod{background:#ff5722;color:#fff;box-shadow:0 2px 8px rgba(255,87,34,.4)}.hbtn-del-prod:hover{background:#f4511e;transform:translateY(-1px)}
+.hbtn-add-cat{background:#00897b;color:#fff;box-shadow:0 2px 8px rgba(0,137,123,.4)}.hbtn-add-cat:hover{background:#00796b;transform:translateY(-1px)}
+.hbtn-del-cat{background:#6d4c41;color:#fff;box-shadow:0 2px 8px rgba(109,76,65,.4)}.hbtn-del-cat:hover{background:#5d4037;transform:translateY(-1px)}
+.hbtn-del-bar{background:#b71c1c;color:#fff;box-shadow:0 2px 8px rgba(183,28,28,.4)}.hbtn-del-bar:hover{background:#c62828;transform:translateY(-1px)}
 #app-header h1{font-size:17px;font-weight:700;color:#fff;letter-spacing:.5px}
 #header-right{display:flex;align-items:center;gap:12px}
 #header-date{font-size:13px;color:#c5cae9;font-weight:600}
@@ -38,10 +42,10 @@ body{font-family:Arial,sans-serif;background:#f4f6fa;color:#1a1a2e;min-height:10
 .sync-ok{background:#1b7e3a;color:#fff}.sync-saving{background:#e67e22;color:#fff}
 .sync-error{background:#c0392b;color:#fff}
 /* NAV */
-#main-nav{display:flex;background:#fff;border-bottom:2px solid var(--border);box-shadow:var(--shadow);overflow-x:auto}
-.nav-tab{padding:13px 22px;cursor:pointer;font-size:14px;font-weight:700;border-bottom:4px solid transparent;margin-bottom:-2px;transition:all .2s;display:flex;align-items:center;gap:7px;color:#666;white-space:nowrap;flex-shrink:0}
-.nav-tab:hover{background:#f8f9ff}
-.nav-tab-add{padding:13px 16px;cursor:pointer;font-size:13px;font-weight:700;color:#3949ab;display:flex;align-items:center;gap:5px;border-left:1px solid var(--border);transition:all .2s;white-space:nowrap;flex-shrink:0}
+#main-nav{display:flex;background:linear-gradient(180deg,#f0f2f8 0%,#e6e9f2 100%);border-bottom:3px solid #d0d4e8;box-shadow:0 2px 8px rgba(0,0,0,.08);overflow-x:auto;padding:8px 12px 0;gap:4px}
+.nav-tab{padding:10px 20px;cursor:pointer;font-size:13px;font-weight:800;border-radius:12px 12px 0 0;margin:0 3px;transition:all .25s;display:flex;align-items:center;gap:8px;color:#666;white-space:nowrap;flex-shrink:0;border:2px solid transparent;border-bottom:none;position:relative;bottom:-2px;letter-spacing:.3px}
+.nav-tab:hover{transform:translateY(-2px);filter:brightness(1.05)}
+.nav-tab-add{padding:9px 14px;cursor:pointer;font-size:13px;font-weight:800;color:#3949ab;display:flex;align-items:center;gap:5px;background:#e8eaf6;border-radius:10px 10px 0 0;border:2px dashed #9fa8da;border-bottom:none;transition:all .2s;white-space:nowrap;flex-shrink:0;margin-bottom:0;position:relative;bottom:-2px}
 .nav-tab-add:hover{background:#e8eaf6}
 /* TOOLBAR */
 #toolbar{display:flex;align-items:center;gap:10px;padding:12px 20px;background:#fff;border-bottom:1px solid var(--border);flex-wrap:wrap;box-shadow:var(--shadow)}
@@ -87,10 +91,18 @@ body{font-family:Arial,sans-serif;background:#f4f6fa;color:#1a1a2e;min-height:10
 .section-block{background:#fff;border:1px solid var(--border);border-radius:12px;margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow)}
 .section-block.all-hidden{display:none}
 .section-header{padding:7px 10px;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:space-between}
+.btn-del-cat{background:rgba(255,255,255,.25);color:#fff;border:none;border-radius:6px;padding:3px 8px;font-size:11px;cursor:pointer;font-weight:700;margin-left:8px}
+.btn-del-cat:hover{background:rgba(255,80,80,.5)}
+.btn-add-cat{background:#00c853;color:#fff;border:none;border-radius:7px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;box-shadow:0 2px 6px rgba(0,200,83,.3)}
+.btn-add-cat:hover{background:#00e676}
+.cat-emoji-grid{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.cat-emoji-btn{font-size:20px;background:#f4f6fa;border:2px solid transparent;border-radius:8px;padding:6px 10px;cursor:pointer}
+.cat-emoji-btn.selected,.cat-emoji-btn:hover{border-color:#3949ab;background:#e8eaf6}
 .sec-boisson{background:#e3f2fd;border-left:5px solid #1565c0;color:#0d47a1}
 .sec-vin{background:#f3e5f5;border-left:5px solid #7b1fa2;color:#4a148c}
 .sec-whisky{background:#fff3e0;border-left:5px solid #e65100;color:#bf360c}
 .sec-champagne{background:#fce4ec;border-left:5px solid #880e4f;color:#560027}
+.sec-custom{background:#e8f5e9;border-left:5px solid #2e7d32;color:#1b5e20}
 /* TABLE */
 .stock-table{width:100%;border-collapse:collapse}
 .stock-table th{background:#f4f6fa;color:#222;font-size:10px;text-transform:uppercase;letter-spacing:.2px;padding:5px 2px;text-align:center;border-bottom:2px solid var(--border);font-weight:900}
@@ -439,6 +451,10 @@ create policy "Public access" on stock_data
     <button class="hbtn hbtn-report" onclick="copyFromPrev()">↺ Reporter J-1</button>
     <button class="hbtn hbtn-export" onclick="exportCSV()">⬇ Export CSV</button>
     <button class="hbtn hbtn-add" id="hbtn-add-prod" onclick="openAddModal()">+ Ajouter produit</button>
+    <button class="hbtn hbtn-del-prod" id="hbtn-del-prod" onclick="openDeleteProductModal()">✕ Suppr. produit</button>
+    <button class="hbtn hbtn-add-cat" onclick="openAddCategoryModal()">📂 Ajouter catégorie</button>
+    <button class="hbtn hbtn-del-cat" onclick="openDeleteCategoryModal()">🗑 Suppr. catégorie</button>
+    <button class="hbtn hbtn-del-bar" onclick="openDeleteBarModal()">🏠 Suppr. bar</button>
     <button class="hbtn hbtn-refresh" onclick="refreshPage()">⟳ Rafraîchir</button>
     <button class="hbtn hbtn-fix" onclick="openFixModal()">🔧 Corriger base</button>
     <button class="hbtn hbtn-sync" onclick="resetDefaultProducts()">↺ Sync produits</button>
@@ -562,6 +578,146 @@ create policy "Public access" on stock_data
   </div>
 </div>
 
+<!-- MODAL SUPPRIMER PRODUIT -->
+<div class="modal-overlay" id="del-prod-modal">
+  <div class="modal-box">
+    <h3>✕ Supprimer un produit</h3>
+    <p class="sub">Sélectionnez la catégorie et le produit à supprimer pour <strong id="del-prod-bar-name"></strong></p>
+    <div style="margin-bottom:12px">
+      <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:5px">Catégorie</label>
+      <select id="del-prod-cat" onchange="populateDelProdList()" style="width:100%;padding:9px 12px;border:1.5px solid #c5cae9;border-radius:8px;font-size:13px;box-sizing:border-box;outline:none"></select>
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:5px">Produit</label>
+      <select id="del-prod-name" style="width:100%;padding:9px 12px;border:1.5px solid #c5cae9;border-radius:8px;font-size:13px;box-sizing:border-box;outline:none"></select>
+    </div>
+    <div style="background:#fff3e0;border-radius:8px;padding:10px;margin-bottom:12px;font-size:12px;color:#e65100">
+      ⚠ Cette action supprimera le produit de la liste. Les données historiques seront conservées.
+    </div>
+    <div id="del-prod-error" style="color:#e53935;font-size:12px;margin-bottom:8px;display:none"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModals()">Annuler</button>
+      <button class="btn-confirm" onclick="confirmDeleteProduct()" style="background:#ff5722">✕ Supprimer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SUPPRIMER CATÉGORIE -->
+<div class="modal-overlay" id="del-cat-modal">
+  <div class="modal-box">
+    <h3>🗑 Supprimer une catégorie</h3>
+    <p class="sub">Sélectionnez la catégorie à supprimer pour <strong id="del-cat-bar-name"></strong></p>
+    <div style="margin-bottom:14px">
+      <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:5px">Catégorie</label>
+      <select id="del-cat-select" style="width:100%;padding:9px 12px;border:1.5px solid #c5cae9;border-radius:8px;font-size:13px;box-sizing:border-box;outline:none"></select>
+    </div>
+    <div id="del-cat-warning" style="background:#fff3f3;border:2px solid #e53935;border-radius:8px;padding:12px;margin-bottom:12px;font-size:12px;color:#b71c1c;display:none">
+      <strong>⚠ ATTENTION !</strong><br>
+      Vous allez supprimer la catégorie <strong id="del-cat-name-confirm"></strong> et <strong>TOUS ses produits</strong>.<br><br>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:700">
+        <input type="checkbox" id="del-cat-confirm-check" onchange="toggleDelCatBtn()">
+        Je confirme vouloir supprimer cette catégorie
+      </label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModals()">Annuler</button>
+      <button id="del-cat-btn" class="btn-confirm" onclick="confirmDeleteCategory()" style="background:#6d4c41;opacity:.4;cursor:not-allowed" disabled>🗑 Supprimer définitivement</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL AJOUTER CATÉGORIE -->
+<div class="modal-overlay" id="add-cat-modal">
+  <div class="modal-box">
+    <h3>➕ Ajouter une catégorie</h3>
+    <p class="sub">La catégorie sera ajoutée pour le bar <strong id="add-cat-bar-name"></strong></p>
+    <div style="margin-bottom:12px">
+      <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:6px">Choisissez un emoji</label>
+      <div style="font-size:11px;color:#90a4ae;margin-bottom:6px">🍹 Boissons</div>
+      <div class="cat-emoji-grid" id="cat-emoji-grid">
+        <span class="cat-emoji-btn selected" data-emoji="🍹" onclick="selectCatEmoji(this)">🍹</span>
+        <span class="cat-emoji-btn" data-emoji="🥤" onclick="selectCatEmoji(this)">🥤</span>
+        <span class="cat-emoji-btn" data-emoji="🍸" onclick="selectCatEmoji(this)">🍸</span>
+        <span class="cat-emoji-btn" data-emoji="🍻" onclick="selectCatEmoji(this)">🍻</span>
+        <span class="cat-emoji-btn" data-emoji="🥂" onclick="selectCatEmoji(this)">🥂</span>
+        <span class="cat-emoji-btn" data-emoji="🍾" onclick="selectCatEmoji(this)">🍾</span>
+        <span class="cat-emoji-btn" data-emoji="🥃" onclick="selectCatEmoji(this)">🥃</span>
+        <span class="cat-emoji-btn" data-emoji="☕" onclick="selectCatEmoji(this)">☕</span>
+        <span class="cat-emoji-btn" data-emoji="🧃" onclick="selectCatEmoji(this)">🧃</span>
+        <span class="cat-emoji-btn" data-emoji="🫖" onclick="selectCatEmoji(this)">🫖</span>
+        <span class="cat-emoji-btn" data-emoji="🧋" onclick="selectCatEmoji(this)">🧋</span>
+        <span class="cat-emoji-btn" data-emoji="🍵" onclick="selectCatEmoji(this)">🍵</span>
+      </div>
+      <div style="font-size:11px;color:#90a4ae;margin:8px 0 6px">🍽️ Cuisine</div>
+      <div class="cat-emoji-grid">
+        <span class="cat-emoji-btn" data-emoji="🍽️" onclick="selectCatEmoji(this)">🍽️</span>
+        <span class="cat-emoji-btn" data-emoji="🍔" onclick="selectCatEmoji(this)">🍔</span>
+        <span class="cat-emoji-btn" data-emoji="🍟" onclick="selectCatEmoji(this)">🍟</span>
+        <span class="cat-emoji-btn" data-emoji="🍕" onclick="selectCatEmoji(this)">🍕</span>
+        <span class="cat-emoji-btn" data-emoji="🌮" onclick="selectCatEmoji(this)">🌮</span>
+        <span class="cat-emoji-btn" data-emoji="🌯" onclick="selectCatEmoji(this)">🌯</span>
+        <span class="cat-emoji-btn" data-emoji="🥗" onclick="selectCatEmoji(this)">🥗</span>
+        <span class="cat-emoji-btn" data-emoji="🍱" onclick="selectCatEmoji(this)">🍱</span>
+        <span class="cat-emoji-btn" data-emoji="🍜" onclick="selectCatEmoji(this)">🍜</span>
+        <span class="cat-emoji-btn" data-emoji="🍝" onclick="selectCatEmoji(this)">🍝</span>
+        <span class="cat-emoji-btn" data-emoji="🍛" onclick="selectCatEmoji(this)">🍛</span>
+        <span class="cat-emoji-btn" data-emoji="🍲" onclick="selectCatEmoji(this)">🍲</span>
+        <span class="cat-emoji-btn" data-emoji="🥘" onclick="selectCatEmoji(this)">🥘</span>
+        <span class="cat-emoji-btn" data-emoji="🫕" onclick="selectCatEmoji(this)">🫕</span>
+        <span class="cat-emoji-btn" data-emoji="🥩" onclick="selectCatEmoji(this)">🥩</span>
+        <span class="cat-emoji-btn" data-emoji="🍗" onclick="selectCatEmoji(this)">🍗</span>
+        <span class="cat-emoji-btn" data-emoji="🍖" onclick="selectCatEmoji(this)">🍖</span>
+        <span class="cat-emoji-btn" data-emoji="🌭" onclick="selectCatEmoji(this)">🌭</span>
+        <span class="cat-emoji-btn" data-emoji="🥪" onclick="selectCatEmoji(this)">🥪</span>
+        <span class="cat-emoji-btn" data-emoji="🥚" onclick="selectCatEmoji(this)">🥚</span>
+        <span class="cat-emoji-btn" data-emoji="🧆" onclick="selectCatEmoji(this)">🧆</span>
+        <span class="cat-emoji-btn" data-emoji="🫔" onclick="selectCatEmoji(this)">🫔</span>
+        <span class="cat-emoji-btn" data-emoji="🥙" onclick="selectCatEmoji(this)">🥙</span>
+        <span class="cat-emoji-btn" data-emoji="🍤" onclick="selectCatEmoji(this)">🍤</span>
+      </div>
+      <div style="font-size:11px;color:#90a4ae;margin:8px 0 6px">🍰 Desserts & Snacks</div>
+      <div class="cat-emoji-grid">
+        <span class="cat-emoji-btn" data-emoji="🍰" onclick="selectCatEmoji(this)">🍰</span>
+        <span class="cat-emoji-btn" data-emoji="🎂" onclick="selectCatEmoji(this)">🎂</span>
+        <span class="cat-emoji-btn" data-emoji="🍩" onclick="selectCatEmoji(this)">🍩</span>
+        <span class="cat-emoji-btn" data-emoji="🧁" onclick="selectCatEmoji(this)">🧁</span>
+        <span class="cat-emoji-btn" data-emoji="🍪" onclick="selectCatEmoji(this)">🍪</span>
+        <span class="cat-emoji-btn" data-emoji="🍫" onclick="selectCatEmoji(this)">🍫</span>
+        <span class="cat-emoji-btn" data-emoji="🍿" onclick="selectCatEmoji(this)">🍿</span>
+        <span class="cat-emoji-btn" data-emoji="🥜" onclick="selectCatEmoji(this)">🥜</span>
+        <span class="cat-emoji-btn" data-emoji="🍦" onclick="selectCatEmoji(this)">🍦</span>
+        <span class="cat-emoji-btn" data-emoji="🧇" onclick="selectCatEmoji(this)">🧇</span>
+        <span class="cat-emoji-btn" data-emoji="🥐" onclick="selectCatEmoji(this)">🥐</span>
+        <span class="cat-emoji-btn" data-emoji="🍞" onclick="selectCatEmoji(this)">🍞</span>
+      </div>
+      <div style="font-size:11px;color:#90a4ae;margin:8px 0 6px">🥦 Autres</div>
+      <div class="cat-emoji-grid">
+        <span class="cat-emoji-btn" data-emoji="🥦" onclick="selectCatEmoji(this)">🥦</span>
+        <span class="cat-emoji-btn" data-emoji="🥬" onclick="selectCatEmoji(this)">🥬</span>
+        <span class="cat-emoji-btn" data-emoji="🍅" onclick="selectCatEmoji(this)">🍅</span>
+        <span class="cat-emoji-btn" data-emoji="🧀" onclick="selectCatEmoji(this)">🧀</span>
+        <span class="cat-emoji-btn" data-emoji="🛒" onclick="selectCatEmoji(this)">🛒</span>
+        <span class="cat-emoji-btn" data-emoji="📦" onclick="selectCatEmoji(this)">📦</span>
+        <span class="cat-emoji-btn" data-emoji="🧴" onclick="selectCatEmoji(this)">🧴</span>
+        <span class="cat-emoji-btn" data-emoji="🧹" onclick="selectCatEmoji(this)">🧹</span>
+        <span class="cat-emoji-btn" data-emoji="⭐" onclick="selectCatEmoji(this)">⭐</span>
+        <span class="cat-emoji-btn" data-emoji="🎯" onclick="selectCatEmoji(this)">🎯</span>
+        <span class="cat-emoji-btn" data-emoji="💡" onclick="selectCatEmoji(this)">💡</span>
+        <span class="cat-emoji-btn" data-emoji="🔧" onclick="selectCatEmoji(this)">🔧</span>
+      </div>
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:5px">Nom de la catégorie</label>
+      <input type="text" id="new-cat-name" class="modal-input" placeholder="Ex: Softs, Cocktails, Snacks..." style="width:100%;padding:10px 12px;border:1.5px solid #c5cae9;border-radius:8px;font-size:13px;box-sizing:border-box;outline:none">
+    </div>
+    <div id="add-cat-error" style="color:#e53935;font-size:12px;margin-bottom:8px;display:none"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModals()">Annuler</button>
+      <button class="btn-confirm" onclick="confirmAddCategory()">➕ Ajouter</button>
+    </div>
+  </div>
+</div>
+
 <!-- FIX DATABASE MODAL -->
 <div class="modal-overlay" id="fix-modal">
   <div class="modal-box">
@@ -583,12 +739,23 @@ create policy "Public access" on stock_data
 <!-- DELETE BAR MODAL -->
 <div class="modal-overlay" id="delbar-modal">
   <div class="modal-box">
-    <h3>🗑 Supprimer ce bar ?</h3>
-    <p class="sub" id="delbar-msg"></p>
-    <p style="font-size:13px;color:#c0392b;background:#fff0f0;border-radius:8px;padding:10px;margin-top:4px">⚠ Le bar et ses produits seront supprimés. Les données de stock historiques resteront dans la base.</p>
+    <h3>🗑 Supprimer un bar</h3>
+    <div style="margin-bottom:14px">
+      <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:5px">Bar à supprimer</label>
+      <select id="delbar-select" onchange="showDelBarWarning()" style="width:100%;padding:9px 12px;border:1.5px solid #c5cae9;border-radius:8px;font-size:13px;box-sizing:border-box;outline:none"></select>
+    </div>
+    <div id="delbar-warning" style="background:#fff3f3;border:2px solid #e53935;border-radius:8px;padding:12px;margin-bottom:12px;font-size:12px;color:#b71c1c;display:none">
+      <strong>⚠ ATTENTION — Action irréversible !</strong><br>
+      Vous allez supprimer le bar <strong id="delbar-msg"></strong>.<br>
+      Toutes les données de stock de ce bar seront perdues.<br><br>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:700">
+        <input type="checkbox" id="delbar-confirm-check" onchange="toggleDelBarBtn()">
+        Je confirme vouloir supprimer ce bar définitivement
+      </label>
+    </div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModals()">Annuler</button>
-      <button class="btn-confirm" style="background:#c0392b" onclick="confirmDeleteBar()">🗑 Supprimer</button>
+      <button id="delbar-confirm-btn" onclick="confirmDeleteBar()" style="background:#b71c1c;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px;opacity:.4" disabled>🗑 Supprimer définitivement</button>
     </div>
   </div>
 </div>
@@ -662,7 +829,7 @@ const DEFAULT_BARS = {
     }
   },
   ouaga:{
-    name:'Bar Ouaga 2000', color:'#c05c00', colorLight:'#fff3e0',
+    name:'Bar Ouaga 2000', color:'#7c4dff', colorLight:'#ede7f6',
     products:{
       boissons:["Coca 50","Fanta 33","Fanta 50","XL","Malta","Youssou","Dopel Energie","Beaufort 33","Castel 33","Guiness 33","Castel Moyenne","Heineken","Desperado","Booster Tequila","Beaufort 65","Castel 65","Guiness 65","Sobebra","Racine","Chil","Dopel 50","Brakina Special","Bravo","Dafani","Libs","Eau Lafi 0,5","Eau Lafi 1,5","Booster Mangue","Ira","Red Bull","Eau Gazeuse","Malia","Fruitelly","Smirnoff"],
       vins:["Agor","19 Crimes","Capitor","Roberson","Ombre de Cambrase","JP Chenet","JP Chenet Ice","Baron d'Arignac","Grande Epoque","Louis Azenac","Beauvillon","Grand Noir","Stand Stone","Roche Mazet","Baileys","Hugo","Castel Merlot","Castel Sauvignon","Castel Syrah","Castel Ice","Castel Cuvée Blanche","Castel Cote du Rhone","Castel Grenache","Calvet","Cotes du Rhone Petit Paris","La Fiole","Les Amoureuses","Mouton Cadet Reserve","Grand Sud","Castel Gewurz"],
@@ -697,14 +864,28 @@ function getDirtyDaysCount(){
 }
 
 const MONTHS=["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
-const SECTIONS=[
+const DEFAULT_SECTIONS=[
   {key:'boissons',label:'🍺 Boissons',cls:'sec-boisson',isWhisky:false},
   {key:'vins',    label:'🍷 Vins',    cls:'sec-vin',    isWhisky:false},
   {key:'whisky',  label:'🥃 Whisky & Spiritueux',cls:'sec-whisky',isWhisky:true},
   {key:'champagne',label:'🍾 Champagne',cls:'sec-champagne',isWhisky:false}
 ];
+let SECTIONS = [...DEFAULT_SECTIONS];
 
-function getProds(bar){ return BARS[bar]?.products||{boissons:[],vins:[],whisky:[],champagne:[]}; }
+// Obtenir les sections pour un bar (DEFAULT + custom)
+function getSections(bar){
+  const custom = BARS[bar]?.customSections || [];
+  return [...DEFAULT_SECTIONS, ...custom];
+}
+
+function getProds(bar){
+  const products = BARS[bar]?.products || {boissons:[],vins:[],whisky:[],champagne:[]};
+  // S'assurer que les sections custom ont leur entrée
+  (BARS[bar]?.customSections||[]).forEach(sec=>{
+    if(!products[sec.key]) products[sec.key] = [];
+  });
+  return products;
+}
 
 // ── SYNC STATUS ───────────────────────────────────────────────────────────────
 function setSyncStatus(state,msg){
@@ -723,15 +904,19 @@ function renderTabs(){
   container.innerHTML=Object.keys(BARS).map(key=>{
     const b=BARS[key]; const active=key===currentBar;
     const style=active
-      ?`color:${b.color};border-bottom:4px solid ${b.color};background:${b.colorLight};margin-bottom:-2px`
-      :'color:#666;border-bottom:4px solid transparent;margin-bottom:-2px';
-    const isDefault=key==='cissin'||key==='ouaga';
-    const closeBtn=!isDefault
+      ?`color:#fff;background:${b.color};border-color:${b.color};box-shadow:0 -3px 12px ${b.color}55,0 4px 0 ${b.color};font-size:13px`
+      :`color:${b.color};background:#fff;border-color:${b.color}44;box-shadow:none`;
+    const barCount = Object.keys(BARS).length;
+    const isLastBar = barCount <= 1;
+    const closeBtn = (!isLastBar && currentUser?.role==='admin')
       ?`<span onclick="askDeleteBar(event,'${key}')" title="Supprimer" style="margin-left:4px;opacity:.5;font-size:13px;cursor:pointer" onmouseover="this.style.opacity=1;this.style.color='#c0392b'" onmouseout="this.style.opacity=.5;this.style.color='inherit'">✕</span>`
       :'';
+    const dotStyle = active
+      ? `width:10px;height:10px;border-radius:50%;background:#fff;display:inline-block;flex-shrink:0;box-shadow:0 0 6px rgba(255,255,255,.8)`
+      : `width:10px;height:10px;border-radius:50%;background:${b.color};display:inline-block;flex-shrink:0`;
     return `<div class="nav-tab" style="${style}" onclick="switchBar('${key}')">
-      <span style="width:10px;height:10px;border-radius:50%;background:${b.color};display:inline-block;flex-shrink:0"></span>
-      ${b.name}${closeBtn}
+      <span style="${dotStyle}"></span>
+      🏠 ${b.name}${closeBtn}
     </div>`;
   }).join('');
 }
@@ -928,6 +1113,7 @@ function renderSections(saved){
   const bc=BARS[bar]?.color||'#1b7e3a', bn=BARS[bar]?.name||bar;
   let rouge=0,jaune=0,vert=0,total=0;
   let html='';
+  SECTIONS = getSections(bar); // Sections par défaut + custom du bar
   SECTIONS.forEach(sec=>{
     const list=prods[sec.key]||[];
     if(!list.length)return;
@@ -955,12 +1141,16 @@ function renderSections(saved){
       whisky:['#e8eaf6','#c5cae9'],
       champagne:['#fff5f8','#fce4ec']
     };
+    // Couleurs alternées pour les catégories custom
+    const customColors = [['#f1f8e9','#dcedc8'],['#e0f7fa','#b2ebf2'],['#fce4ec','#f8bbd0'],['#fffde7','#fff9c4']];
+    const customIdx = SECTIONS.filter(s=>s.custom).findIndex(s=>s.key===sec.key);
+    const colors = rowColors[sec.key] || customColors[customIdx%customColors.length] || ['#f9f9f9','#f0f0f0'];
     list.forEach((prod,rowIdx)=>{
       const pid=encodeId(bar,sec.key,prod);
       const sv=saved?.[ sec.key]?.[prod]||{veille:0,charge:0,reste:0,vendue:0};
       const tot=(+sv.veille||0)+(+sv.charge||0);
       const rc=getStatusCls(+(sv.reste||0),sec.isWhisky);
-      const rowBg = (rowColors[sec.key]||['#fff','#f9f9f9'])[rowIdx%2];
+      const rowBg = colors[rowIdx%2];
       total++;
       if(rc==='rest-rouge')rouge++;else if(rc==='rest-jaune')jaune++;else vert++;
       html+=`<tr style="background:${rowBg}">
@@ -978,6 +1168,7 @@ function renderSections(saved){
     });
     html+=`</tbody></table></div></div>`;
   });
+
   document.getElementById('stock-sections').innerHTML=html;
   renderSummaryCards(bn,bc,total,rouge,jaune,vert);
   // Appliquer l'état disabled/readonly sur les champs vendue selon le Total
@@ -1547,21 +1738,63 @@ async function confirmNewBar(){
 
 // ── SUPPRIMER BAR ─────────────────────────────────────────────────────────────
 let barToDelete=null;
-function askDeleteBar(e,key){
-  e.stopPropagation(); barToDelete=key;
-  document.getElementById('delbar-msg').textContent=`Supprimer "${BARS[key].name}" et tous ses produits ?`;
+function openDeleteBarModal(){
+  if(!currentUser || currentUser.role !== 'admin'){
+    showToast("⚠ Accès réservé aux administrateurs","#c0392b"); return;
+  }
+  const keys = Object.keys(BARS);
+  if(keys.length <= 1){ showToast("⚠ Impossible de supprimer le dernier bar","#e65100"); return; }
+  const sel = document.getElementById('delbar-select');
+  sel.innerHTML = keys.map(k=>`<option value="${k}">${BARS[k].name}</option>`).join('');
+  document.getElementById('delbar-warning').style.display = 'none';
+  document.getElementById('delbar-confirm-check').checked = false;
+  const btn = document.getElementById('delbar-confirm-btn');
+  btn.disabled = true; btn.style.opacity = '.4';
+  barToDelete = null;
+  showDelBarWarning();
   document.getElementById('delbar-modal').classList.add('open');
 }
+
+function showDelBarWarning(){
+  const sel = document.getElementById('delbar-select');
+  barToDelete = sel.value;
+  const name = BARS[barToDelete]?.name || barToDelete;
+  document.getElementById('delbar-msg').textContent = `"${name}"`;
+  document.getElementById('delbar-warning').style.display = 'block';
+  document.getElementById('delbar-confirm-check').checked = false;
+  toggleDelBarBtn();
+}
+
+function toggleDelBarBtn(){
+  const checked = document.getElementById('delbar-confirm-check').checked;
+  const btn = document.getElementById('delbar-confirm-btn');
+  btn.disabled = !checked;
+  btn.style.opacity = checked ? '1' : '.4';
+  btn.style.cursor = checked ? 'pointer' : 'not-allowed';
+}
+
+function askDeleteBar(e,key){
+  e.stopPropagation();
+  openDeleteBarModal();
+  // Pré-sélectionner le bar
+  setTimeout(()=>{
+    const sel = document.getElementById('delbar-select');
+    if(sel){ sel.value = key; showDelBarWarning(); }
+  }, 100);
+}
 async function confirmDeleteBar(){
-  if(!barToDelete)return;
-  const name=BARS[barToDelete].name;
+  const btn = document.getElementById('delbar-confirm-btn');
+  if(!barToDelete || btn?.disabled) return;
+  const name = BARS[barToDelete].name;
+  // Double confirmation finale
+  if(!confirm(`Dernière confirmation : supprimer définitivement "${name}" ?`)) return;
   delete BARS[barToDelete];
-  try{await dbSaveConfig(BARS);}catch(e){}
-  closeModals();barToDelete=null;
-  const first=Object.keys(BARS)[0];
-  renderTabs();switchBar(first);
-  populateBarSelector(); // Mettre à jour le sélecteur
-  showToast(`✓ Bar "${name}" supprimé`,'#c0392b');
+  try{ await dbSaveConfig(BARS); }catch(e){}
+  closeModals(); barToDelete = null;
+  const first = Object.keys(BARS)[0];
+  renderTabs(); switchBar(first);
+  populateBarSelector();
+  showToast(`✓ Bar "${name}" supprimé`, '#c0392b');
 }
 
 // ── SYNC PRODUITS PAR DÉFAUT ──────────────────────────────────────────────────
@@ -1644,6 +1877,218 @@ async function runDatabaseFix(){
   await loadDay(); showToast(`✓ ${totalFixed} corrections appliquées`);
 }
 
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SUPPRIMER PRODUIT (depuis header)
+// ══════════════════════════════════════════════════════════════════════════════
+function openDeleteProductModal(){
+  const bar = currentBar;
+  document.getElementById('del-prod-bar-name').textContent = BARS[bar]?.name || bar;
+  document.getElementById('del-prod-error').style.display = 'none';
+  // Peupler les catégories
+  const secs = getSections(bar);
+  const prods = getProds(bar);
+  const catSel = document.getElementById('del-prod-cat');
+  catSel.innerHTML = secs
+    .filter(s => (prods[s.key]||[]).length > 0)
+    .map(s => `<option value="${s.key}">${s.label} (${(prods[s.key]||[]).length})</option>`)
+    .join('');
+  populateDelProdList();
+  document.getElementById('del-prod-modal').classList.add('open');
+}
+
+function populateDelProdList(){
+  const bar = currentBar;
+  const secKey = document.getElementById('del-prod-cat').value;
+  const prods = getProds(bar);
+  const list = prods[secKey] || [];
+  document.getElementById('del-prod-name').innerHTML = list
+    .map(p => `<option value="${p}">${p}</option>`).join('');
+}
+
+async function confirmDeleteProduct(){
+  const errEl = document.getElementById('del-prod-error');
+  errEl.style.display = 'none';
+  const bar = currentBar;
+  const secKey = document.getElementById('del-prod-cat').value;
+  const prodName = document.getElementById('del-prod-name').value;
+  if(!prodName){ errEl.textContent = '❌ Aucun produit sélectionné'; errEl.style.display='block'; return; }
+
+  if(!confirm(`Supprimer "${prodName}" de la catégorie ?`)) return;
+
+  BARS[bar].products[secKey] = (BARS[bar].products[secKey]||[]).filter(p=>p!==prodName);
+  if(BARS[bar].products[secKey].length === 0){
+    if(!BARS[bar].__emptied) BARS[bar].__emptied = {};
+    BARS[bar].__emptied[secKey] = true;
+  }
+  try{
+    await dbSaveConfig(BARS);
+    closeModals();
+    loadDay();
+    showToast(`✓ "${prodName}" supprimé`);
+  }catch(e){
+    errEl.textContent = '❌ Erreur lors de la suppression'; errEl.style.display='block';
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SUPPRIMER CATÉGORIE (depuis header) — double confirmation
+// ══════════════════════════════════════════════════════════════════════════════
+function openDeleteCategoryModal(){
+  const bar = currentBar;
+  document.getElementById('del-cat-bar-name').textContent = BARS[bar]?.name || bar;
+  document.getElementById('del-cat-warning').style.display = 'none';
+  document.getElementById('del-cat-confirm-check').checked = false;
+  const btn = document.getElementById('del-cat-btn');
+  btn.disabled = true; btn.style.opacity = '.4'; btn.style.cursor = 'not-allowed';
+
+  // Peupler avec seulement les catégories custom (pas les défauts)
+  const customSecs = (BARS[bar]?.customSections || []);
+  const sel = document.getElementById('del-cat-select');
+  if(customSecs.length === 0){
+    sel.innerHTML = '<option value="">Aucune catégorie personnalisée</option>';
+  } else {
+    sel.innerHTML = customSecs.map(s => `<option value="${s.key}">${s.label}</option>`).join('');
+    sel.onchange = showDelCatWarning;
+    showDelCatWarning();
+  }
+  document.getElementById('del-cat-modal').classList.add('open');
+}
+
+function showDelCatWarning(){
+  const bar = currentBar;
+  const secKey = document.getElementById('del-cat-select').value;
+  if(!secKey) return;
+  const sec = getSections(bar).find(s=>s.key===secKey);
+  const prods = getProds(bar);
+  const count = (prods[secKey]||[]).length;
+  document.getElementById('del-cat-name-confirm').textContent =
+    `"${sec?.label || secKey}" (${count} produit${count>1?'s':''})`;
+  document.getElementById('del-cat-warning').style.display = 'block';
+  document.getElementById('del-cat-confirm-check').checked = false;
+  toggleDelCatBtn();
+}
+
+function toggleDelCatBtn(){
+  const checked = document.getElementById('del-cat-confirm-check').checked;
+  const btn = document.getElementById('del-cat-btn');
+  btn.disabled = !checked;
+  btn.style.opacity = checked ? '1' : '.4';
+  btn.style.cursor = checked ? 'pointer' : 'not-allowed';
+}
+
+async function confirmDeleteCategory(){
+  const btn = document.getElementById('del-cat-btn');
+  if(btn.disabled) return;
+  const bar = currentBar;
+  const secKey = document.getElementById('del-cat-select').value;
+  if(!secKey) return;
+  const sec = getSections(bar).find(s=>s.key===secKey);
+  // Double confirmation finale
+  if(!confirm(`Dernière confirmation : supprimer "${sec?.label || secKey}" et TOUS ses produits ?`)) return;
+
+  if(BARS[bar].customSections){
+    BARS[bar].customSections = BARS[bar].customSections.filter(s=>s.key!==secKey);
+  }
+  delete BARS[bar].products[secKey];
+  try{
+    await dbSaveConfig(BARS);
+    closeModals();
+    loadDay();
+    showToast(`✓ Catégorie supprimée`, '#c0392b');
+  }catch(e){
+    showToast('⚠ Erreur lors de la suppression', '#c0392b');
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// GESTION DES CATÉGORIES PERSONNALISÉES
+// ══════════════════════════════════════════════════════════════════════════════
+let selectedCatEmoji = '🍹';
+
+function selectCatEmoji(el){
+  document.querySelectorAll('.cat-emoji-btn').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedCatEmoji = el.dataset.emoji;
+}
+
+function openAddCategoryModal(){
+  const barName = BARS[currentBar]?.name || currentBar;
+  document.getElementById('add-cat-bar-name').textContent = barName;
+  document.getElementById('new-cat-name').value = '';
+  document.getElementById('add-cat-error').style.display = 'none';
+  selectedCatEmoji = '🍹';
+  document.querySelectorAll('.cat-emoji-btn').forEach((b,i)=>b.classList.toggle('selected',i===0));
+  document.getElementById('add-cat-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('new-cat-name').focus(), 200);
+}
+
+async function confirmAddCategory(){
+  const errEl = document.getElementById('add-cat-error');
+  errEl.style.display = 'none';
+  const name = document.getElementById('new-cat-name').value.trim();
+  if(!name){ errEl.textContent = '❌ Saisissez un nom de catégorie'; errEl.style.display='block'; return; }
+
+  // Créer la clé unique
+  const key = name.toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g,'') // enlever accents
+    .replace(/[^a-z0-9]/g,'_').replace(/__+/g,'_').replace(/^_|_$/g,'');
+
+  if(!key){ errEl.textContent = '❌ Nom invalide'; errEl.style.display='block'; return; }
+
+  // Vérifier que la clé n'existe pas déjà
+  const allSections = getSections(currentBar);
+  if(allSections.some(s=>s.key===key)){
+    errEl.textContent = '❌ Cette catégorie existe déjà';
+    errEl.style.display = 'block'; return;
+  }
+
+  // Ajouter la catégorie
+  if(!BARS[currentBar].customSections) BARS[currentBar].customSections = [];
+  const newSection = {
+    key,
+    label: `${selectedCatEmoji} ${name}`,
+    cls: 'sec-custom',
+    isWhisky: false,
+    custom: true
+  };
+  BARS[currentBar].customSections.push(newSection);
+
+  // Initialiser les produits pour cette catégorie
+  if(!BARS[currentBar].products[key]) BARS[currentBar].products[key] = [];
+
+  try{
+    await dbSaveConfig(BARS);
+    closeModals();
+    loadDay();
+    showToast(`✓ Catégorie "${selectedCatEmoji} ${name}" ajoutée !`);
+  }catch(e){
+    errEl.textContent = '❌ Erreur lors de la sauvegarde'; errEl.style.display='block';
+  }
+}
+
+async function deleteCategory(bar, secKey){
+  const sec = getSections(bar).find(s=>s.key===secKey);
+  const label = sec?.label || secKey;
+  if(!confirm(`Supprimer la catégorie "${label}" et tous ses produits ?`)) return;
+
+  // Supprimer la section custom
+  if(BARS[bar].customSections){
+    BARS[bar].customSections = BARS[bar].customSections.filter(s=>s.key!==secKey);
+  }
+  // Supprimer les produits de cette catégorie
+  delete BARS[bar].products[secKey];
+
+  try{
+    await dbSaveConfig(BARS);
+    loadDay();
+    showToast(`✓ Catégorie supprimée`, '#c0392b');
+  }catch(e){
+    showToast('⚠ Erreur lors de la suppression', '#c0392b');
+  }
+}
+
 // ── UTILS ─────────────────────────────────────────────────────────────────────
 function closeModals(){document.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('open'));}
 function showToast(msg,bg='#1b7e3a'){
@@ -1677,6 +2122,18 @@ async function initApp(){
     const cfg=await dbGetConfig();
     if(cfg&&cfg.cissin){
       BARS=cfg;
+      // Forcer la mise à jour des couleurs si elles ont changé dans DEFAULT_BARS
+      let colorUpdated = false;
+      Object.keys(DEFAULT_BARS).forEach(barKey=>{
+        if(BARS[barKey] && DEFAULT_BARS[barKey]){
+          if(BARS[barKey].color !== DEFAULT_BARS[barKey].color){
+            BARS[barKey].color = DEFAULT_BARS[barKey].color;
+            BARS[barKey].colorLight = DEFAULT_BARS[barKey].colorLight;
+            colorUpdated = true;
+          }
+        }
+      });
+      if(colorUpdated) await dbSaveConfig(BARS);
       // Ajouter les produits manquants des nouvelles catégories SEULEMENT si absents
       // (ne pas écraser les catégories vidées volontairement par l'utilisateur)
       let needsUpdate = false;
@@ -2203,7 +2660,8 @@ function applyBarRestriction(barKey){
 }
 
 function applyRoleRestrictions(role){
-  const adminOnlyBtns = ['openFixModal','resetDefaultProducts','openNewBarModal','openChangePwdModal'];
+  const adminOnlyBtns = ['openFixModal','resetDefaultProducts','openNewBarModal','openChangePwdModal',
+    'openDeleteProductModal','openDeleteCategoryModal','openAddCategoryModal','openDeleteBarModal'];
   if(role !== 'admin'){
     // Masquer les boutons admin-only
     document.querySelectorAll('[onclick]').forEach(el=>{
