@@ -1365,7 +1365,7 @@ function renderSections(saved){
       if(rc==='rest-rouge')rouge++;else if(rc==='rest-jaune')jaune++;else vert++;
       html+=`<tr style="background:${rowBg}">
         <td style="background:${rowBg};position:sticky;left:0;z-index:2;box-shadow:2px 0 4px rgba(0,0,0,.08)">${prod}</td>
-        <td style="background:${rowBg}"><input class="qty-input${(sv.veille||0)===0?' zero-val':''}" type="number" min="0" id="${pid}_v" value="${sv.veille||0}" style="background:${rowBg}" onfocus="clearIfZero(this)" onblur="restoreIfEmpty(this,'${pid}')" onchange="recalcRow('${pid}')"></td>
+        <td style="background:${rowBg}"><input class="qty-input${(sv.veille||0)===0?' zero-val':''}" type="number" min="0" id="${pid}_v" value="${sv.veille||0}" style="background:${rowBg}" onfocus="clearIfZero(this)" onblur="restoreIfEmpty(this,'${pid}')" onchange="recalcRow('${pid}');markUnsaved();dirtyFields.add('${pid}')"></td>
         <td style="background:${rowBg}"><input class="qty-input${(sv.charge||0)===0?' zero-val':''}" type="number" min="0" id="${pid}_c" value="${sv.charge||0}" style="background:${rowBg}" onfocus="clearIfZero(this)" onblur="restoreIfEmpty(this,'${pid}')" onchange="recalcRow('${pid}');markUnsaved();dirtyFields.add('${pid}')"></td>
         <td class="total-cell" id="${pid}_t" style="background:${rowBg}">${tot}</td>
         <td style="background:${rowBg}"><input class="qty-input${(sv.vendue||0)===0?' zero-val':''}${tot===0?' vendue-disabled':''}" type="number" min="0" id="${pid}_s" value="${sv.vendue||0}" style="background:${tot===0?'#e8e8e8':rowBg};color:${tot===0?'#999':'#000'};font-weight:900" onfocus="clearIfZero(this)" onblur="restoreIfEmpty(this,'${pid}')" oninput="calcResteFromVendue('${pid}')"></td>
@@ -1649,8 +1649,8 @@ function collectData(){
       const s=document.getElementById(pid+'_s'); // input Produits Vendue
       const r=document.getElementById(pid+'_r'); // td Restante (calculé)
       if(v){
-        const veille2  = +v.value||0;
-        const charge2  = +c.value||0;
+        const veille2  = v.value===''||v.value===null ? 0 : +v.value;
+        const charge2  = c.value===''||c.value===null ? 0 : +c.value;
         const tot2     = veille2+charge2;
         const vendue2  = +s?.value||0;                    // valeur saisie Produits Vendue
         const reste2   = Math.max(0, tot2 - vendue2);     // calculé = Total - Vendue
