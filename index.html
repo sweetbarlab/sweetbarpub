@@ -1213,32 +1213,14 @@ async function loadDay(){
       let needsSave = false;
 
       if(saved){
-        // Jour déjà sauvegardé
+        // Jour déjà sauvegardé → afficher tel quel, sans écraser les valeurs
         let {data: correctedData, addedProducts: added1} = normalizeData(saved, currentBar, prevData);
 
-        // Vérifier si la veille correspond au reste de J-1 ET si des produits manquaient
-        let hasChanges = false;
-        SECTIONS.forEach(sec=>{
-          (prods[sec.key]||[]).forEach(prod=>{
-            const resteJm1 = prevData?.[sec.key]?.[prod]?.reste !== undefined ? +(prevData[sec.key][prod].reste) : null;
-            const veilleJ  = correctedData[sec.key]?.[prod]?.veille ?? null;
-            // Corriger la veille si elle ne correspond pas au reste de J-1
-            if(resteJm1 !== null && veilleJ !== resteJm1){
-              correctedData[sec.key][prod].veille = +resteJm1; // forcer en nombre
-              hasChanges = true;
-            }
-            // Détecter si un produit a été ajouté
-            if(!saved[sec.key]?.[prod]) hasChanges = true; // détecté via added1.length aussi
-          });
-        });
-
-        if(hasChanges || added1.length > 0){
+        if(added1.length > 0){
+          // Sauvegarder seulement si des produits manquants ont été ajoutés
           await dbSave(currentBar, year, month, day, correctedData);
           renderSections(correctedData);
-          if(added1.length > 0)
-            showToast(`✓ ${added1.length} produit(s) ajouté(s) au Jour ${day}`);
-          else
-            showToast(`✓ Données du Jour ${day} corrigées`);
+          showToast(`✓ ${added1.length} produit(s) ajouté(s) au Jour ${day}`);
         } else {
           renderSections(saved);
         }
@@ -1727,14 +1709,17 @@ async function propagateToNextDays(bar, year, month, fromDay, fromData){
   const prods = getProds(bar);
   const nextData = await dbGet(bar, year, month, nextDay);
 
-  // Vérifier si J+1 a déjà une charge saisie → ne pas écraser les données saisies
-  let nextHasCharge = false;
+  // Ne propager que si J+1 n'a pas encore de données saisies manuellement
+  // (ni charge, ni veille modifiée intentionnellement)
+  let nextHasManualData = false;
   if(nextData){
     SECTIONS.forEach(sec=>{
-      Object.values(nextData[sec.key]||{}).forEach(v=>{ if((v.charge||0)>0) nextHasCharge=true; });
+      Object.values(nextData[sec.key]||{}).forEach(v=>{
+        if((v.charge||0)>0 || (v.vendue||0)>0) nextHasManualData=true;
+      });
     });
   }
-  if(nextHasCharge) return; // J+1 a déjà une vraie charge → on ne touche pas
+  if(nextHasManualData) return; // J+1 a des données saisies → ne pas toucher
 
   // Construire J+1 : veille = reste de J (toujours, même si J+1 existe déjà avec veille=0)
   const updatedNext = {};
