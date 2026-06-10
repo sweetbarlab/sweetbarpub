@@ -109,8 +109,12 @@ body{font-family:Arial,sans-serif;background:#f4f6fa;color:#1a1a2e;min-height:10
 /* Bouton menu hamburger */
 #menu-hamburger{background:rgba(255,255,255,.18);color:#fff;border:1.5px solid rgba(255,255,255,.4);padding:7px 13px;border-radius:8px;font-size:16px;font-weight:900;cursor:pointer;transition:all .2s;letter-spacing:1px}
 #menu-hamburger:hover{background:rgba(255,255,255,.3);box-shadow:0 2px 10px rgba(0,0,0,.2)}
-#btn-logout{background:rgba(239,83,80,.25);color:#fff;border:1.5px solid rgba(239,83,80,.5);padding:6px 11px;border-radius:8px;font-size:15px;cursor:pointer;transition:all .2s;font-weight:700}
-#btn-logout:hover{background:rgba(239,83,80,.5);box-shadow:0 2px 8px rgba(239,83,80,.4)}
+#btn-logout{display:flex;align-items:center;gap:6px;background:linear-gradient(135deg,#e53935,#c62828);color:#fff;border:none;padding:7px 14px;border-radius:20px;font-size:12px;font-weight:800;cursor:pointer;transition:all .2s;box-shadow:0 2px 8px rgba(229,57,53,.4);letter-spacing:.3px}
+#btn-logout:hover{background:linear-gradient(135deg,#ef5350,#e53935);transform:translateY(-1px);box-shadow:0 4px 12px rgba(229,57,53,.5)}
+#btn-logout:active{transform:translateY(0)}
+#btn-refresh{display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.15);color:#fff;border:1.5px solid rgba(255,255,255,.3);width:32px;height:32px;border-radius:50%;cursor:pointer;transition:all .2s;padding:0}
+#btn-refresh:hover{background:rgba(255,255,255,.28);transform:rotate(180deg);box-shadow:0 2px 8px rgba(0,0,0,.2)}
+#btn-refresh svg{flex-shrink:0}
 #app-header h1{font-size:17px;font-weight:700;color:#fff;letter-spacing:.5px}
 #header-right{display:flex;align-items:center;gap:12px}
 #header-date{font-size:13px;color:#c5cae9;font-weight:600}
@@ -349,7 +353,7 @@ tr.hidden-row{display:none}
   <button class="sb-item sb-primary" onclick="saveDay();closeSidebar()"><span class="sb-icon">✓</span> Sauvegarder</button>
   <button class="sb-item sb-primary" onclick="copyFromPrev();closeSidebar()"><span class="sb-icon">↺</span> Reporter J-1</button>
   <button class="sb-item sb-primary" onclick="exportCSV();closeSidebar()"><span class="sb-icon">⬇</span> Exporter CSV</button>
-  <button class="sb-item sb-primary" onclick="refreshPage();closeSidebar()"><span class="sb-icon">⟳</span> Rafraîchir</button>
+
   <div class="sb-separator"></div>
 
   <!-- PRODUITS -->
@@ -663,9 +667,15 @@ create policy "Public access" on stock_data
     </button>
   </div>
   <div id="header-right">
+    <button id="btn-refresh" onclick="refreshPage()" title="Rafraîchir">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+    </button>
+    <button id="btn-logout" onclick="doLogout()" title="Se déconnecter">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Quitter
+    </button>
     <span id="sync-status" class="sync-ok">✓ Connecté</span>
     <span id="header-date"></span>
-    <button id="btn-logout" onclick="doLogout()" title="Déconnexion">⏻</button>
     <button id="menu-hamburger" onclick="openSidebar()">☰</button>
   </div>
 </div>
