@@ -653,6 +653,7 @@ create policy "Public access" on stock_data
       <span style="color:#c5cae9;font-size:9px;font-weight:500">Sweet Bar Pub Restaurant</span>
     </div>
     <span id="current-user-badge">👤 —</span>
+    <span id="btn-admin" style="display:none"></span>
   </div>
   <div id="header-center">
     <button class="hbtn hbtn-save" id="hbtn-save-btn" onclick="saveDay()">
@@ -1383,7 +1384,7 @@ function renderSections(saved){
       html+=`<tr style="background:${rowBg}">
         <td style="background:${rowBg};position:sticky;left:0;z-index:2;box-shadow:2px 0 4px rgba(0,0,0,.08)">${prod}</td>
         <td style="background:${rowBg}"><input class="qty-input${(sv.veille||0)===0?' zero-val':''}" type="number" min="0" id="${pid}_v" value="${sv.veille||0}" style="background:${rowBg}" onfocus="clearIfZero(this)" onblur="restoreIfEmpty(this,'${pid}')" onchange="recalcRow('${pid}')"></td>
-        <td style="background:${rowBg}"><input class="qty-input${(sv.charge||0)===0?' zero-val':''}" type="number" min="0" id="${pid}_c" value="${sv.charge||0}" style="background:${rowBg}" onfocus="clearIfZero(this)" onblur="restoreIfEmpty(this,'${pid}')" onchange="recalcRow('${pid}')"></td>
+        <td style="background:${rowBg}"><input class="qty-input${(sv.charge||0)===0?' zero-val':''}" type="number" min="0" id="${pid}_c" value="${sv.charge||0}" style="background:${rowBg}" onfocus="clearIfZero(this)" onblur="restoreIfEmpty(this,'${pid}')" onchange="recalcRow('${pid}');markUnsaved();dirtyFields.add('${pid}')"></td>
         <td class="total-cell" id="${pid}_t" style="background:${rowBg}">${tot}</td>
         <td style="background:${rowBg}"><input class="qty-input${(sv.vendue||0)===0?' zero-val':''}${tot===0?' vendue-disabled':''}" type="number" min="0" id="${pid}_s" value="${sv.vendue||0}" style="background:${tot===0?'#e8e8e8':rowBg};color:${tot===0?'#999':'#000'};font-weight:900" onfocus="clearIfZero(this)" onblur="restoreIfEmpty(this,'${pid}')" oninput="calcResteFromVendue('${pid}')"></td>
         <td class="${rc}" id="${pid}_r" style="font-weight:800;font-size:12px">${Math.max(0,tot-(+sv.vendue||0))}</td>
@@ -1473,6 +1474,8 @@ function calcResteFromVendue(pid){
   const sEl = document.getElementById(pid+'_s'); // vendue input
   const rEl = document.getElementById(pid+'_r'); // reste cell
   if(!tEl || !sEl || !rEl) return;
+  markUnsaved();
+  dirtyFields.add(pid);
   const tot    = +tEl.textContent||0;
   const vendue = +sEl.value||0;
 
@@ -2557,7 +2560,7 @@ function startAutoSync(){
   autoSyncInterval = setInterval(async()=>{
     // Rafraîchir seulement s'il n'y a pas de modifications non-sauvegardées
     // et que l'utilisateur n'est pas en train de saisir
-    if(unsavedChanges || isUserActive()){
+    if(unsavedChanges || dirtyFields.size > 0 || isUserActive()){
       setSyncStatus('ok', unsavedChanges ? '⚠ Non sauvegardé' : 'En attente...');
       return;
     }
