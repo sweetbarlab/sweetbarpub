@@ -109,6 +109,8 @@ body{font-family:Arial,sans-serif;background:#f4f6fa;color:#1a1a2e;min-height:10
 /* Bouton menu hamburger */
 #menu-hamburger{background:rgba(255,255,255,.18);color:#fff;border:1.5px solid rgba(255,255,255,.4);padding:7px 13px;border-radius:8px;font-size:16px;font-weight:900;cursor:pointer;transition:all .2s;letter-spacing:1px}
 #menu-hamburger:hover{background:rgba(255,255,255,.3);box-shadow:0 2px 10px rgba(0,0,0,.2)}
+#btn-logout{background:rgba(239,83,80,.25);color:#fff;border:1.5px solid rgba(239,83,80,.5);padding:6px 11px;border-radius:8px;font-size:15px;cursor:pointer;transition:all .2s;font-weight:700}
+#btn-logout:hover{background:rgba(239,83,80,.5);box-shadow:0 2px 8px rgba(239,83,80,.4)}
 #app-header h1{font-size:17px;font-weight:700;color:#fff;letter-spacing:.5px}
 #header-right{display:flex;align-items:center;gap:12px}
 #header-date{font-size:13px;color:#c5cae9;font-weight:600}
@@ -380,7 +382,6 @@ tr.hidden-row{display:none}
   <div class="sb-section">👤 Compte</div>
   <button class="sb-item sb-primary" id="sb-pwd" onclick="closeSidebar();setTimeout(openChangePwdModal,200)"><span class="sb-icon">🔑</span> Changer mot de passe</button>
   <button class="sb-item sb-primary" id="sb-pin" onclick="closeSidebar();setTimeout(openPinModal,200)" style="display:none"><span class="sb-icon">🔐</span> Configurer PIN secours</button>
-  <button class="sb-item sb-danger" onclick="doLogout();closeSidebar()"><span class="sb-icon">⏻</span> Déconnexion</button>
 
 </div>
 
@@ -664,6 +665,7 @@ create policy "Public access" on stock_data
   <div id="header-right">
     <span id="sync-status" class="sync-ok">✓ Connecté</span>
     <span id="header-date"></span>
+    <button id="btn-logout" onclick="doLogout()" title="Déconnexion">⏻</button>
     <button id="menu-hamburger" onclick="openSidebar()">☰</button>
   </div>
 </div>
