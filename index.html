@@ -35,6 +35,47 @@ body{font-family:Arial,sans-serif;background:#f4f6fa;color:#1a1a2e;min-height:10
 .hbtn-add-cat{background:#00897b;color:#fff;box-shadow:0 2px 8px rgba(0,137,123,.4)}.hbtn-add-cat:hover{background:#00796b;transform:translateY(-1px)}
 .hbtn-del-cat{background:#6d4c41;color:#fff;box-shadow:0 2px 8px rgba(109,76,65,.4)}.hbtn-del-cat:hover{background:#5d4037;transform:translateY(-1px)}
 .hbtn-del-bar{background:#b71c1c;color:#fff;box-shadow:0 2px 8px rgba(183,28,28,.4)}.hbtn-del-bar:hover{background:#c62828;transform:translateY(-1px)}
+
+/* ── MENU ACTIONS ── */
+#actions-menu-wrap{position:relative;display:inline-block}
+#actions-menu-btn{background:linear-gradient(135deg,#fff 0%,#f0f4ff 100%);color:#1a237e;border:2px solid rgba(255,255,255,.4);padding:7px 14px;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:8px;box-shadow:0 2px 8px rgba(0,0,0,.15);transition:all .2s}
+#actions-menu-btn:hover{background:#fff;box-shadow:0 4px 14px rgba(0,0,0,.2);transform:translateY(-1px)}
+#actions-menu-btn .arrow{font-size:10px;transition:transform .2s}
+#actions-menu-btn.open .arrow{transform:rotate(180deg)}
+#actions-dropdown{position:absolute;top:calc(100% + 8px);right:0;background:#fff;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.2);padding:8px;min-width:220px;z-index:500;display:none;flex-direction:column;gap:4px;border:1px solid #e8eaf6}
+#actions-dropdown.open{display:flex}
+.menu-section-label{font-size:10px;font-weight:800;color:#90a4ae;text-transform:uppercase;letter-spacing:.5px;padding:6px 10px 2px}
+.menu-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:700;color:#333;transition:all .15s;border:none;background:none;width:100%;text-align:left}
+.menu-item:hover{background:#f4f6fa;transform:translateX(2px)}
+.menu-item .mi-icon{font-size:16px;width:24px;text-align:center}
+.menu-item.danger{color:#b71c1c}.menu-item.danger:hover{background:#fff3f3}
+.menu-item.success{color:#1b7e3a}.menu-item.success:hover{background:#f0fff4}
+.menu-item.primary{color:#1a237e}.menu-item.primary:hover{background:#f0f4ff}
+.menu-item.warning{color:#e65100}.menu-item.warning:hover{background:#fff8f0}
+.menu-separator{height:1px;background:#f0f2f7;margin:4px 0}
+@media(max-width:600px){#actions-dropdown{right:-10px;min-width:200px}}
+
+/* ── SIDEBAR NAV ── */
+#sidebar{position:fixed;top:0;right:-290px;width:270px;height:100vh;background:#fff;z-index:8000;transition:right .3s cubic-bezier(.4,0,.2,1);box-shadow:-6px 0 30px rgba(0,0,0,.18);display:flex;flex-direction:column;overflow-y:auto}
+#sidebar.open{right:0}
+#sidebar-overlay{position:fixed;inset:0;background:rgba(26,35,126,.35);backdrop-filter:blur(2px);z-index:7999;display:none}
+#sidebar-overlay.open{display:block}
+#sidebar-header{padding:18px 16px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#1a237e 0%,#3949ab 100%);flex-shrink:0}
+#sidebar-header .sb-title{color:#fff;font-weight:900;font-size:15px;letter-spacing:.3px}
+#sidebar-close{background:rgba(255,255,255,.2);border:none;color:#fff;font-size:16px;cursor:pointer;padding:5px 9px;border-radius:8px;font-weight:700;transition:all .15s}
+#sidebar-close:hover{background:rgba(255,255,255,.35)}
+.sb-section{padding:14px 16px 5px;font-size:10px;font-weight:900;color:#9fa8da;text-transform:uppercase;letter-spacing:1px}
+.sb-item{display:flex;align-items:center;gap:12px;padding:11px 14px;color:#333;font-size:13px;font-weight:700;cursor:pointer;border:none;background:none;width:calc(100% - 16px);text-align:left;transition:all .15s;border-radius:10px;margin:2px 8px}
+.sb-item:hover{transform:translateX(3px)}
+.sb-item .sb-icon{font-size:18px;width:28px;text-align:center;flex-shrink:0}
+.sb-item.sb-success{color:#2e7d32}.sb-item.sb-success:hover{background:#e8f5e9;color:#1b5e20}
+.sb-item.sb-warning{color:#e65100}.sb-item.sb-warning:hover{background:#fff3e0;color:#bf360c}
+.sb-item.sb-danger{color:#b71c1c}.sb-item.sb-danger:hover{background:#ffebee;color:#c62828}
+.sb-item.sb-primary{color:#1565c0}.sb-item.sb-primary:hover{background:#e3f2fd;color:#0d47a1}
+.sb-separator{height:1px;background:#f0f2f7;margin:5px 16px}
+/* Bouton menu hamburger */
+#menu-hamburger{background:rgba(255,255,255,.18);color:#fff;border:1.5px solid rgba(255,255,255,.4);padding:7px 13px;border-radius:8px;font-size:16px;font-weight:900;cursor:pointer;transition:all .2s;letter-spacing:1px}
+#menu-hamburger:hover{background:rgba(255,255,255,.3);box-shadow:0 2px 10px rgba(0,0,0,.2)}
 #app-header h1{font-size:17px;font-weight:700;color:#fff;letter-spacing:.5px}
 #header-right{display:flex;align-items:center;gap:12px}
 #header-date{font-size:13px;color:#c5cae9;font-weight:600}
@@ -212,6 +253,13 @@ tr.hidden-row{display:none}
 /* ── ÉCRAN DE CONNEXION ── */
 #login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#1a237e 0%,#283593 50%,#1565c0 100%);display:flex;align-items:center;justify-content:center;z-index:9000}
 #recover-modal{z-index:10000!important}
+#change-pwd-modal{z-index:9500!important}
+#admin-modal{z-index:9500!important}
+#del-prod-modal{z-index:9500!important}
+#del-cat-modal{z-index:9500!important}
+#add-cat-modal{z-index:9500!important}
+#delbar-modal{z-index:9500!important}
+#newbar-modal{z-index:9500!important}
 .login-box{background:#fff;border-radius:20px;padding:36px 32px;width:320px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.35);text-align:center}
 .login-logo{height:70px;width:auto;object-fit:contain;border-radius:12px;padding:6px 14px;background:linear-gradient(135deg,#f0f4ff,#e8eaf6);box-shadow:0 2px 10px rgba(0,0,0,.12);margin-bottom:18px}
 .login-title{font-size:20px;font-weight:900;color:#1a237e;margin-bottom:4px}
@@ -253,6 +301,55 @@ tr.hidden-row{display:none}
 <body>
 
 
+<!-- SIDEBAR NAVIGATION -->
+<div id="sidebar-overlay" onclick="closeSidebar()"></div>
+<div id="sidebar">
+  <div id="sidebar-header">
+    <span class="sb-title">☰ Menu Sweet Bar</span>
+    <button id="sidebar-close" onclick="closeSidebar()">✕</button>
+  </div>
+
+  <!-- STOCK -->
+  <div class="sb-section">📊 Stock</div>
+  <button class="sb-item sb-primary" onclick="saveDay();closeSidebar()"><span class="sb-icon">✓</span> Sauvegarder</button>
+  <button class="sb-item sb-primary" onclick="copyFromPrev();closeSidebar()"><span class="sb-icon">↺</span> Reporter J-1</button>
+  <button class="sb-item sb-primary" onclick="exportCSV();closeSidebar()"><span class="sb-icon">⬇</span> Exporter CSV</button>
+  <button class="sb-item sb-primary" onclick="refreshPage();closeSidebar()"><span class="sb-icon">⟳</span> Rafraîchir</button>
+  <div class="sb-separator"></div>
+
+  <!-- PRODUITS -->
+  <div class="sb-section">📦 Produits</div>
+  <button class="sb-item sb-success" id="sb-add-prod" onclick="closeSidebar();setTimeout(openAddModal,200)"><span class="sb-icon">➕</span> Ajouter un produit</button>
+  <button class="sb-item sb-warning" id="sb-del-prod" onclick="closeSidebar();setTimeout(openDeleteProductModal,200)"><span class="sb-icon">✕</span> Supprimer un produit</button>
+  <div class="sb-separator"></div>
+
+  <!-- CATÉGORIES -->
+  <div class="sb-section">📂 Catégories</div>
+  <button class="sb-item sb-success" id="sb-add-cat" onclick="closeSidebar();setTimeout(openAddCategoryModal,200)"><span class="sb-icon">📂</span> Ajouter une catégorie</button>
+  <button class="sb-item sb-warning" id="sb-del-cat" onclick="closeSidebar();setTimeout(openDeleteCategoryModal,200)"><span class="sb-icon">🗑</span> Supprimer une catégorie</button>
+  <div class="sb-separator"></div>
+
+  <!-- BARS -->
+  <div class="sb-section" id="sb-bars-section" style="display:none">🏠 Bars</div>
+  <button class="sb-item sb-success" id="sb-add-bar" onclick="closeSidebar();setTimeout(openNewBarModal,200)" style="display:none"><span class="sb-icon">➕</span> Ajouter un bar</button>
+  <button class="sb-item sb-danger" id="sb-del-bar" onclick="closeSidebar();setTimeout(openDeleteBarModal,200)" style="display:none"><span class="sb-icon">🗑</span> Supprimer un bar</button>
+  <div class="sb-separator" id="sb-bars-sep" style="display:none"></div>
+
+  <!-- ADMINISTRATION -->
+  <div class="sb-section" id="sb-admin-section" style="display:none">⚙ Administration</div>
+  <button class="sb-item sb-primary" id="sb-users" onclick="closeSidebar();setTimeout(openAdminModal,200)" style="display:none"><span class="sb-icon">👤</span> Gérer les utilisateurs</button>
+  <button class="sb-item sb-warning" id="sb-fix" onclick="closeSidebar();setTimeout(openFixModal,200)" style="display:none"><span class="sb-icon">🔧</span> Corriger la base</button>
+  <button class="sb-item sb-warning" id="sb-sync" onclick="resetDefaultProducts();closeSidebar()" style="display:none"><span class="sb-icon">↺</span> Sync produits</button>
+  <div class="sb-separator" id="sb-admin-sep" style="display:none"></div>
+
+  <!-- COMPTE -->
+  <div class="sb-section">👤 Compte</div>
+  <button class="sb-item sb-primary" id="sb-pwd" onclick="closeSidebar();setTimeout(openChangePwdModal,200)"><span class="sb-icon">🔑</span> Changer mot de passe</button>
+  <button class="sb-item sb-primary" id="sb-pin" onclick="closeSidebar();setTimeout(openPinModal,200)" style="display:none"><span class="sb-icon">🔐</span> Configurer PIN secours</button>
+  <button class="sb-item sb-danger" onclick="doLogout();closeSidebar()"><span class="sb-icon">⏻</span> Déconnexion</button>
+
+</div>
+
 <!-- ÉCRAN DE CONNEXION -->
 <div id="login-screen">
   <div class="login-box">
@@ -268,6 +365,29 @@ tr.hidden-row{display:none}
     <button class="login-btn" onclick="doLogin()">Se connecter</button>
     <span class="login-link" onclick="openRecoverModal()">🔓 Mot de passe oublié ?</span>
     <div class="login-version">Sweet Bar Pub v2.0</div>
+  </div>
+</div>
+
+<!-- MODAL PIN DE SECOURS -->
+<div class="modal-overlay" id="pin-modal" style="z-index:9500!important">
+  <div class="modal-box">
+    <h3>🔐 Configurer le PIN de secours</h3>
+    <div style="background:#fff8e1;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#e65100">
+      ⚠ Ce PIN sera utilisé si l'envoi d'email échoue lors de la récupération de mot de passe. Mémorisez-le bien.
+    </div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:5px">Nouveau PIN (4-8 chiffres)</label>
+      <div class="pwd-wrap"><input type="password" id="pin-new" class="login-field" placeholder="PIN de secours" maxlength="8" inputmode="numeric"><button type="button" class="pwd-toggle" onclick="togglePwd('pin-new',this)">👁</button></div>
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:5px">Confirmer le PIN</label>
+      <div class="pwd-wrap"><input type="password" id="pin-confirm" class="login-field" placeholder="Confirmer le PIN" maxlength="8" inputmode="numeric"><button type="button" class="pwd-toggle" onclick="togglePwd('pin-confirm',this)">👁</button></div>
+    </div>
+    <div id="pin-modal-error" style="color:#e53935;font-size:12px;font-weight:600;margin-bottom:10px;display:none"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModals()">Annuler</button>
+      <button class="btn-confirm" onclick="saveRecoveryPin()" style="background:#0288d1">🔐 Enregistrer le PIN</button>
+    </div>
   </div>
 </div>
 
@@ -358,10 +478,6 @@ tr.hidden-row{display:none}
       <select id="pwd-target-user" style="width:100%;padding:9px 12px;border:1.5px solid #c5cae9;border-radius:8px;font-size:13px;box-sizing:border-box;outline:none;margin-bottom:0"></select>
     </div>
     <div style="margin-bottom:12px">
-      <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:5px">Votre mot de passe admin (confirmation)</label>
-      <div class="pwd-wrap"><input type="password" id="pwd-current" class="login-field" placeholder="Votre mot de passe admin"><button type="button" class="pwd-toggle" onclick="togglePwd('pwd-current',this)">👁</button></div>
-    </div>
-    <div style="margin-bottom:12px">
       <label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:5px">Nouveau mot de passe</label>
       <div class="pwd-wrap"><input type="password" id="pwd-new" class="login-field" placeholder="Nouveau mot de passe (min. 4 car.)"><button type="button" class="pwd-toggle" onclick="togglePwd('pwd-new',this)">👁</button></div>
     </div>
@@ -370,15 +486,6 @@ tr.hidden-row{display:none}
       <div class="pwd-wrap"><input type="password" id="pwd-confirm" class="login-field" placeholder="Confirmer le nouveau mot de passe"><button type="button" class="pwd-toggle" onclick="togglePwd('pwd-confirm',this)">👁</button></div>
     </div>
     <div id="change-pwd-error" style="color:#e53935;font-size:12px;font-weight:600;margin-bottom:10px;display:none"></div>
-    <div style="font-size:11px;color:#90a4ae;text-align:center;margin-bottom:4px">↓ Faites défiler pour voir le PIN de secours</div>
-    <hr style="border:none;border-top:1px solid #e0e0e0;margin:10px 0">
-    <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:8px">🔐 Code PIN de secours (facultatif)</div>
-    <div style="background:#fff8e1;border-radius:8px;padding:10px;margin-bottom:12px;font-size:11px;color:#e65100">
-      ⚠ Ce PIN sera utilisé si l'envoi d'email échoue. Gardez-le secret.
-    </div>
-    <div class="pwd-wrap" style="margin-bottom:8px"><input type="password" id="new-recovery-pin" class="login-field" placeholder="PIN de secours (4-8 chiffres)" maxlength="8" inputmode="numeric"><button type="button" class="pwd-toggle" onclick="togglePwd('new-recovery-pin',this)">👁</button></div>
-    <div class="pwd-wrap"><input type="password" id="new-recovery-pin2" class="login-field" placeholder="Confirmer le PIN" maxlength="8" inputmode="numeric"><button type="button" class="pwd-toggle" onclick="togglePwd('new-recovery-pin2',this)">👁</button></div>
-    <div id="pin-save-msg" style="font-size:11px;margin-top:6px;display:none"></div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModals()">Annuler</button>
       <button class="btn-confirm" onclick="changePassword()" style="background:#0288d1">🔑 Enregistrer</button>
@@ -447,20 +554,8 @@ create policy "Public access" on stock_data
   </div>
   <div id="header-actions">
     <span id="current-user-badge">👤 —</span>
-    <button class="hbtn hbtn-save" onclick="saveDay()">✓ Sauvegarder</button>
-    <button class="hbtn hbtn-report" onclick="copyFromPrev()">↺ Reporter J-1</button>
-    <button class="hbtn hbtn-export" onclick="exportCSV()">⬇ Export CSV</button>
-    <button class="hbtn hbtn-add" id="hbtn-add-prod" onclick="openAddModal()">+ Ajouter produit</button>
-    <button class="hbtn hbtn-del-prod" id="hbtn-del-prod" onclick="openDeleteProductModal()">✕ Suppr. produit</button>
-    <button class="hbtn hbtn-add-cat" onclick="openAddCategoryModal()">📂 Ajouter catégorie</button>
-    <button class="hbtn hbtn-del-cat" onclick="openDeleteCategoryModal()">🗑 Suppr. catégorie</button>
-    <button class="hbtn hbtn-del-bar" onclick="openDeleteBarModal()">🏠 Suppr. bar</button>
-    <button class="hbtn hbtn-refresh" onclick="refreshPage()">⟳ Rafraîchir</button>
-    <button class="hbtn hbtn-fix" onclick="openFixModal()">🔧 Corriger base</button>
-    <button class="hbtn hbtn-sync" onclick="resetDefaultProducts()">↺ Sync produits</button>
-    <button class="hbtn hbtn-admin" id="btn-admin" onclick="openAdminModal()" style="display:none">👤 Utilisateurs</button>
-    <button class="hbtn hbtn-pwd" onclick="openChangePwdModal()">🔑 Mot de passe</button>
-    <button class="hbtn hbtn-logout" onclick="doLogout()">⏻ Déconnexion</button>
+    <button class="hbtn hbtn-save" id="hbtn-save-btn" onclick="saveDay()">✓ Sauvegarder</button>
+    <button id="menu-hamburger" onclick="openSidebar()">☰</button>
   </div>
   <div id="header-right">
     <span id="sync-status" class="sync-ok">✓ Connecté</span>
@@ -932,6 +1027,10 @@ function switchBar(bar){
   const btn=document.getElementById('hbtn-add-prod');
   if(btn){ btn.style.background=barColor; btn.style.color='#fff'; }
 
+  // Mettre à jour couleur bouton sauvegarder + sidebar
+  const saveBtn = document.getElementById('hbtn-save-btn');
+  if(saveBtn){ saveBtn.style.background = barColor; saveBtn.style.color='#fff'; }
+  applyMenuRoles(currentUser?.role || 'user');
   // Vider les champs modifiés localement (changement de bar = nouveau contexte)
   dirtyFields.clear();
   Object.keys(dirtyDays).forEach(k=>{ if(k.startsWith(bar+'_')) delete dirtyDays[k]; });
@@ -2089,6 +2188,64 @@ async function deleteCategory(bar, secKey){
   }
 }
 
+// ── SIDEBAR NAVIGATION ────────────────────────────────────────────────────────
+function openSidebar(){
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sidebar-overlay').classList.add('open');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+}
+
+function applySidebarRoles(role){
+  const isAdmin = role === 'admin';
+  // Sections admin
+  const adminItems = ['sb-bars-section','sb-add-bar','sb-del-bar','sb-bars-sep',
+                      'sb-admin-section','sb-users','sb-fix','sb-sync','sb-admin-sep'];
+  adminItems.forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.style.display = isAdmin ? '' : 'none';
+  });
+  // Changer mot de passe + PIN : admin uniquement
+  ['sb-pwd','sb-pin'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.style.display = isAdmin ? '' : 'none';
+  });
+}
+
+// ── MENU ACTIONS ──────────────────────────────────────────────────────────────
+function toggleActionsMenu(){
+  const btn = document.getElementById('actions-menu-btn');
+  const dd = document.getElementById('actions-dropdown');
+  btn.classList.toggle('open');
+  dd.classList.toggle('open');
+}
+
+function closeActionsMenu(){
+  const btn = document.getElementById('actions-menu-btn');
+  const dd = document.getElementById('actions-dropdown');
+  btn.classList.remove('open');
+  dd.classList.remove('open');
+}
+
+// Fermer le menu si clic en dehors
+document.addEventListener('click', e=>{
+  const wrap = document.getElementById('actions-menu-wrap');
+  if(wrap && !wrap.contains(e.target)) closeActionsMenu();
+});
+
+function applyMenuRoles(role){
+  applySidebarRoles(role);
+  // Couleur du bouton sauvegarder
+  const saveBtn = document.getElementById('hbtn-save-btn');
+  if(saveBtn){
+    const barColor = BARS[currentBar]?.color || '#2e7d32';
+    saveBtn.style.background = barColor;
+    saveBtn.style.color = '#fff';
+  }
+}
+
 // ── UTILS ─────────────────────────────────────────────────────────────────────
 function closeModals(){document.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('open'));}
 function showToast(msg,bg='#1b7e3a'){
@@ -2623,10 +2780,11 @@ async function doLogin(){
     const adminBtn = document.getElementById('btn-admin');
     if(adminBtn) adminBtn.style.display = user.role === 'admin' ? '' : 'none';
 
-    // Masquer les boutons sensibles pour les non-admins
+    // Masquer les boutons selon le rôle
     applyRoleRestrictions(user.role);
 
     await initApp();
+    applyMenuRoles(user.role);
 
     // Restreindre l'accès au bar attribué pour les non-admins
     if(user.role !== 'admin' && user.barAccess){
@@ -2660,17 +2818,7 @@ function applyBarRestriction(barKey){
 }
 
 function applyRoleRestrictions(role){
-  const adminOnlyBtns = ['openFixModal','resetDefaultProducts','openNewBarModal','openChangePwdModal',
-    'openDeleteProductModal','openDeleteCategoryModal','openAddCategoryModal','openDeleteBarModal'];
-  if(role !== 'admin'){
-    // Masquer les boutons admin-only
-    document.querySelectorAll('[onclick]').forEach(el=>{
-      const fn = el.getAttribute('onclick');
-      if(adminOnlyBtns.some(f => fn && fn.includes(f))){
-        el.style.display = 'none';
-      }
-    });
-  }
+  applyMenuRoles(role);
 }
 
 // Déconnexion
@@ -2702,6 +2850,41 @@ function checkSession(){
   return false;
 }
 
+// ── PIN DE SECOURS ────────────────────────────────────────────────────────────
+function openPinModal(){
+  if(!currentUser || currentUser.role !== 'admin'){
+    showToast("⚠ Réservé aux administrateurs","#c0392b"); return;
+  }
+  document.getElementById('pin-new').value = '';
+  document.getElementById('pin-confirm').value = '';
+  document.getElementById('pin-modal-error').style.display = 'none';
+  document.getElementById('pin-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('pin-new').focus(), 200);
+}
+
+async function saveRecoveryPin(){
+  const errEl = document.getElementById('pin-modal-error');
+  errEl.style.display = 'none';
+  const pin = document.getElementById('pin-new').value.trim();
+  const pin2 = document.getElementById('pin-confirm').value.trim();
+
+  if(!pin || !pin2){ errEl.textContent = '❌ Remplissez les deux champs'; errEl.style.display='block'; return; }
+  if(!/^\d{4,8}$/.test(pin)){ errEl.textContent = '❌ PIN invalide (4-8 chiffres uniquement)'; errEl.style.display='block'; return; }
+  if(pin !== pin2){ errEl.textContent = '❌ Les PIN ne correspondent pas'; errEl.style.display='block'; return; }
+
+  try{
+    const users = await loadUsers();
+    const pinHash = await hashPassword(pin + '_pin');
+    users[currentUser.username].recoveryPinHash = pinHash;
+    await saveUsers(users);
+    closeModals();
+    showToast('✓ PIN de secours configuré !');
+  }catch(e){
+    errEl.textContent = '❌ Erreur : ' + e.message;
+    errEl.style.display = 'block';
+  }
+}
+
 // ── CHANGEMENT DE MOT DE PASSE ───────────────────────────────────────────────
 async function openChangePwdModal(){
   if(!currentUser){ showToast("⚠ Non connecté","#c0392b"); return; }
@@ -2712,12 +2895,11 @@ async function openChangePwdModal(){
   sel.innerHTML = Object.keys(users).map(u =>
     `<option value="${u}">${u}${u === currentUser.username ? ' (moi)' : ''}${users[u].role === 'admin' ? ' ⭐' : ''}</option>`
   ).join('');
-  document.getElementById('pwd-current').value = '';
   document.getElementById('pwd-new').value = '';
   document.getElementById('pwd-confirm').value = '';
   document.getElementById('change-pwd-error').style.display = 'none';
   document.getElementById('change-pwd-modal').classList.add('open');
-  setTimeout(()=>document.getElementById('pwd-current').focus(), 200);
+  setTimeout(()=>document.getElementById('pwd-new').focus(), 200);
 }
 
 async function changePassword(){
@@ -2726,55 +2908,27 @@ async function changePassword(){
   errEl.style.display = 'none';
 
   const targetUsername = document.getElementById('pwd-target-user')?.value;
-  const adminPwd = document.getElementById('pwd-current').value;
   const newPwd   = document.getElementById('pwd-new').value;
   const confirm  = document.getElementById('pwd-confirm').value;
 
-  if(!targetUsername || !adminPwd || !newPwd || !confirm){ showErr("❌ Veuillez remplir tous les champs"); return; }
+  if(!targetUsername || !newPwd || !confirm){ showErr("❌ Veuillez remplir tous les champs"); return; }
   if(newPwd.length < 4){ showErr("❌ Nouveau mot de passe trop court (min. 4 car.)"); return; }
   if(newPwd !== confirm){ showErr("❌ Les mots de passe ne correspondent pas"); return; }
 
   try{
     const users = await loadUsers();
-
-    // Vérifier le mot de passe admin
-    const adminUser = users[currentUser.username];
-    if(!adminUser){ showErr("❌ Compte admin introuvable"); return; }
-    const adminHash = await hashPassword(adminPwd);
-    if(adminHash !== adminUser.hash){ showErr("❌ Votre mot de passe admin est incorrect"); return; }
-
-    // Changer le mot de passe de l'utilisateur cible
     const targetUser = users[targetUsername];
-    if(!targetUser){ showErr("❌ Utilisateur cible introuvable"); return; }
+    if(!targetUser){ showErr("❌ Utilisateur introuvable"); return; }
+
+    // Changer directement le mot de passe (admin a tous les droits)
     const newHash = await hashPassword(newPwd);
     users[targetUsername].hash = newHash;
     await saveUsers(users);
 
-    // Sauvegarder le PIN de secours si renseigné
-    const pinEl  = document.getElementById('new-recovery-pin');
-    const pinEl2 = document.getElementById('new-recovery-pin2');
-    const pinMsg = document.getElementById('pin-save-msg');
-    if(pinEl && pinEl.value){
-      const pin = pinEl.value.trim();
-      const pin2 = pinEl2 ? pinEl2.value.trim() : '';
-      if(!/^\d{4,8}$/.test(pin)){
-        if(pinMsg){ pinMsg.textContent = '⚠ PIN invalide (4-8 chiffres uniquement)'; pinMsg.style.color='#e53935'; pinMsg.style.display='block'; }
-        return;
-      }
-      if(pin !== pin2){
-        if(pinMsg){ pinMsg.textContent = '⚠ Les PIN ne correspondent pas'; pinMsg.style.color='#e53935'; pinMsg.style.display='block'; }
-        return;
-      }
-      const pinHash = await hashPassword(pin + '_pin');
-      users[targetUsername].recoveryPinHash = pinHash;
-      await saveUsers(users);
-    }
-
     closeModals();
-    const hasPIN = pinEl && pinEl.value ? ' + PIN de secours' : '';
     const msg = targetUsername === currentUser.username
-      ? `✓ Mot de passe${hasPIN} enregistré !`
-      : `✓ Mot de passe de "${targetUsername}"${hasPIN} modifié !`;
+      ? "✓ Votre mot de passe a été modifié !"
+      : `✓ Mot de passe de "${targetUsername}" modifié !`;
     showToast(msg);
 
   }catch(e){
@@ -2905,6 +3059,7 @@ document.addEventListener('keydown', e=>{
     if(adminBtn) adminBtn.style.display = currentUser.role === 'admin' ? '' : 'none';
     applyRoleRestrictions(currentUser.role);
     await initApp();
+    applyMenuRoles(currentUser.role);
     if(currentUser.role !== 'admin' && currentUser.barAccess){
       applyBarRestriction(currentUser.barAccess);
     }
