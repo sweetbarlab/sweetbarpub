@@ -20,7 +20,7 @@ body{font-family:Arial,sans-serif;background:#f4f6fa;color:#1a1a2e;min-height:10
 :root{--border:#d1d9e6;--shadow:0 2px 8px rgba(0,0,0,.08)}
 #app-header{background:linear-gradient(135deg,#1a237e 0%,#283593 100%);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 10px rgba(0,0,0,.2);position:sticky;top:0;z-index:100;flex-wrap:wrap;gap:8px}
 #header-left{display:flex;align-items:center;gap:10px;flex-shrink:0;flex:1}
-#header-center{display:flex;align-items:center;justify-content:center;flex:0 0 auto;margin:0 12px}
+#header-center{display:flex;align-items:center;justify-content:center;flex:0 0 auto;margin:0 12px;gap:20px}
 #header-right{display:flex;align-items:center;gap:10px;flex-shrink:0;flex:1;justify-content:flex-end}
 .hbtn{padding:6px 11px;border-radius:7px;border:none;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap}
 .hbtn:active{transform:scale(.97)}
@@ -112,9 +112,12 @@ body{font-family:Arial,sans-serif;background:#f4f6fa;color:#1a1a2e;min-height:10
 #btn-logout{display:flex;align-items:center;gap:6px;background:linear-gradient(135deg,#e53935,#c62828);color:#fff;border:none;padding:7px 14px;border-radius:20px;font-size:12px;font-weight:800;cursor:pointer;transition:all .2s;box-shadow:0 2px 8px rgba(229,57,53,.4);letter-spacing:.3px}
 #btn-logout:hover{background:linear-gradient(135deg,#ef5350,#e53935);transform:translateY(-1px);box-shadow:0 4px 12px rgba(229,57,53,.5)}
 #btn-logout:active{transform:translateY(0)}
-#btn-refresh{display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.15);color:#fff;border:1.5px solid rgba(255,255,255,.3);width:32px;height:32px;border-radius:50%;cursor:pointer;transition:all .2s;padding:0}
-#btn-refresh:hover{background:rgba(255,255,255,.28);transform:rotate(180deg);box-shadow:0 2px 8px rgba(0,0,0,.2)}
-#btn-refresh svg{flex-shrink:0}
+#btn-refresh{display:flex;align-items:center;gap:7px;background:linear-gradient(135deg,#00b0ff,#0091ea);color:#fff;border:none;padding:9px 18px;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;transition:all .25s;box-shadow:0 3px 12px rgba(0,145,234,.4),0 1px 3px rgba(0,0,0,.1);letter-spacing:.3px;position:relative;overflow:hidden}
+#btn-refresh::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.15) 0%,transparent 60%);border-radius:12px}
+#btn-refresh:hover{background:linear-gradient(135deg,#29b6f6,#00b0ff);transform:translateY(-2px);box-shadow:0 5px 18px rgba(0,145,234,.55)}
+#btn-refresh:active{transform:translateY(0)}
+#btn-refresh.spinning svg{animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 #app-header h1{font-size:17px;font-weight:700;color:#fff;letter-spacing:.5px}
 #header-right{display:flex;align-items:center;gap:12px}
 #header-date{font-size:13px;color:#c5cae9;font-weight:600}
@@ -665,11 +668,12 @@ create policy "Public access" on stock_data
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
       Sauvegarder
     </button>
+    <button id="btn-refresh" onclick="refreshPage()" title="Rafraîchir les données">
+      <svg id="refresh-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      Rafraîchir
+    </button>
   </div>
   <div id="header-right">
-    <button id="btn-refresh" onclick="refreshPage()" title="Rafraîchir">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-    </button>
     <button id="btn-logout" onclick="doLogout()" title="Se déconnecter">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
       Quitter
@@ -1275,12 +1279,18 @@ async function refreshPage(){
   if(getDirtyDaysCount()>0||unsavedChanges){
     if(!confirm('Modifications non sauvegardées. Rafraîchir quand même ?')) return;
   }
+  const btn = document.getElementById('btn-refresh');
+  if(btn){ btn.classList.add('spinning'); btn.disabled = true; }
   showToast('⟳ Rafraîchissement...');
   dirtyFields.clear();
   Object.keys(dirtyDays).forEach(k=>delete dirtyDays[k]);
   unsavedChanges=false;
   updateSaveBtnCount();
-  loadDay();
+  loadDay().finally(()=>{
+    setTimeout(()=>{
+      if(btn){ btn.classList.remove('spinning'); btn.disabled = false; }
+    }, 700);
+  });
 }
 
 // ── STATUS COLOR ──────────────────────────────────────────────────────────────
