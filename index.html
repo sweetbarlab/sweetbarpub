@@ -2810,15 +2810,16 @@ async function hashPassword(password){
 
 // Charger les utilisateurs depuis Supabase
 async function loadUsers(){
-  try{
-    const rows = await sbFetch('GET', `${TABLE}?id=eq.${USERS_KEY}&select=data`);
-    return rows?.[0]?.data || {};
-  }catch(e){ return {}; }
+  const rows = await sbFetch('GET', `${TABLE}?id=eq.${USERS_KEY}&select=data`);
+  return rows?.[0]?.data || {};
 }
 
 // Sauvegarder les utilisateurs dans Supabase (même schéma que stock_data)
 async function saveUsers(users){
-  await sbFetch('POST', `${TABLE}`, {id: USERS_KEY, data: users});
+  await sbFetch('POST', TABLE, {
+    id: USERS_KEY, bar: 'system', year: 0, month: 0, day: 0,
+    data: users, updated_at: new Date().toISOString()
+  });
 }
 
 // Créer le compte admin par défaut si aucun utilisateur n'existe
@@ -2849,9 +2850,18 @@ async function doLogin(){
   btn.textContent = '⏳ Connexion...'; btn.disabled = true;
 
   try{
-    const users = await loadUsers();
+    let users;
+    try{
+      users = await loadUsers();
+    }catch(netErr){
+      throw new Error('Connexion au serveur impossible. Vérifiez votre connexion internet.');
+    }
+    if(Object.keys(users).length === 0){
+      throw new Error('Base de données utilisateurs vide ou inaccessible. Contactez l\'administrateur.');
+    }
     const user = users[username];
     if(!user){ throw new Error('Utilisateur inconnu'); }
+    if(!user.hash){ throw new Error('Compte corrompu (mot de passe manquant). Contactez l\'administrateur.'); }
     const hash = await hashPassword(password);
     if(hash !== user.hash){ throw new Error('Mot de passe incorrect'); }
 
